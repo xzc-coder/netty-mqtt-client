@@ -1,0 +1,59 @@
+# Compiled class file
+*.class
+
+# Log file
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+
+# Operating System Files  
+  
+*.DS_Store  
+Thumbs.db  
+*.sw?  
+.#*  
+*#  
+*~  
+*.sublime-*  
+  
+# Build Artifacts  
+  
+.gradle/  
+build/  
+target/  
+bin/  
+dependency-reduced-pom.xml  
+  
+# Eclipse Project Files  
+  
+.classpath  
+.project  
+.settings/  
+  
+# IntelliJ IDEA Files  
+  
+*.iml  
+*.ipr  
+*.iws  
+*.idea  
+.idea
+out
+  
+README.html  
+/LOGS/
