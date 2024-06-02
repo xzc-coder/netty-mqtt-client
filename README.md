@@ -56,6 +56,8 @@ Interceptor：拦截器，仅支持拦截MqttClient、MqttConnector、MqttDelega
 
 7.代码全中文注释
 
+8.支持消息持久化（目前支持Redis和内存）
+
 ### 1.5 示例
 
 #### 客户端操作
@@ -64,6 +66,10 @@ Interceptor：拦截器，仅支持拦截MqttClient、MqttConnector、MqttDelega
 
 ```
         MqttClientFactory mqttClientFactory = new DefaultMqttClientFactory();
+        //使用redis消息存储器
+        //MqttMsgStore mqttMsgStore = new RedisMqttMsgStore(new JedisPool("127.0.0.1", 6379));
+        //mqttClientFactory.setMqttMsgStore(mqttMsgStore);
+	//使用内存消息存储器
         MqttMsgStore mqttMsgStore = new MemoryMqttMsgStore();
         mqttClientFactory.setMqttMsgStore(mqttMsgStore);
         //创建连接参数，设置客户端ID
