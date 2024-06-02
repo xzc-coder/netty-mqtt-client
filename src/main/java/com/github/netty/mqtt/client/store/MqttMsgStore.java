@@ -59,6 +59,9 @@ public interface MqttMsgStore {
     void clearMsg(MqttMsgDirection mqttMsgDirection, String clientId);
 
 
+    /**
+     * 关闭消息存储器
+     */
     default void close() {
 
     }

@@ -25,7 +25,13 @@ import java.util.Map;
 public class RedisMqttMsgStore implements MqttMsgStore {
 
 
+    /**
+     * 获取redis发送消息的key，后面跟客户端ID
+     */
     private static final String MQTT_SEND_MSG_REDIS_PREFIX = "mqtt-client:send-message:";
+    /**
+     * 获取redis接受消息的key，后面跟客户端ID
+     */
     private static final String MQTT_RECEIVE_MSG_REDIS_PREFIX = "mqtt-client:receive-message:";
 
     private final JedisPool jedisPool;
@@ -114,6 +120,11 @@ public class RedisMqttMsgStore implements MqttMsgStore {
         }
     }
 
+    /**
+     * 把MQTT消息序列化
+     * @param mqttMsg MQTT消息
+     * @return 序列化后的二进制
+     */
     private byte[] serialize(MqttMsg mqttMsg) {
         if (mqttMsg == null) {
             return null;
@@ -127,6 +138,12 @@ public class RedisMqttMsgStore implements MqttMsgStore {
         }
     }
 
+
+    /**
+     * 把MQTT消息反序列化
+     * @param bytes 序列化后的二进制
+     * @return MQTT消息
+     */
     private MqttMsg deserialize(byte[] bytes) {
         if (bytes == null) {
             return null;

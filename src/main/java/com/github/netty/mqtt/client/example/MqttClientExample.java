@@ -8,8 +8,10 @@ import com.github.netty.mqtt.client.callback.*;
 import com.github.netty.mqtt.client.msg.MqttMsg;
 import com.github.netty.mqtt.client.store.MemoryMqttMsgStore;
 import com.github.netty.mqtt.client.store.MqttMsgStore;
+import com.github.netty.mqtt.client.store.RedisMqttMsgStore;
 import com.github.netty.mqtt.client.support.util.LogUtils;
 import io.netty.handler.codec.mqtt.MqttQoS;
+import redis.clients.jedis.JedisPool;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -26,8 +28,12 @@ public class MqttClientExample {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         MqttClientFactory mqttClientFactory = new DefaultMqttClientFactory();
-        MqttMsgStore mqttMsgStore = new MemoryMqttMsgStore();
+        //使用redis消息存储器
+        MqttMsgStore mqttMsgStore = new RedisMqttMsgStore(new JedisPool("127.0.0.1", 6379));
         mqttClientFactory.setMqttMsgStore(mqttMsgStore);
+        //使用内存消息存储器
+//        MqttMsgStore mqttMsgStore = new MemoryMqttMsgStore();
+//        mqttClientFactory.setMqttMsgStore(mqttMsgStore);
         //创建连接参数，设置客户端ID
         MqttConnectParameter mqttConnectParameter = new MqttConnectParameter("xzc_test");
         //是否自动重连
@@ -39,7 +45,7 @@ public class MqttClientExample {
         //是否使用SSL/TLS
         mqttConnectParameter.setSsl(false);
         //是否清除会话
-        mqttConnectParameter.setCleanSession(true);
+        mqttConnectParameter.setCleanSession(false);
         //心跳间隔
         mqttConnectParameter.setKeepAliveTimeSeconds(60);
         //连接超时时间
@@ -51,7 +57,7 @@ public class MqttClientExample {
         //阻塞连接至完成或超时
         mqttClient.connect();
         //订阅主题消息
-        mqttClient.subscribe("testMqttClient", MqttQoS.AT_LEAST_ONCE);
+        mqttClient.subscribe("testMqttClient", MqttQoS.EXACTLY_ONCE);
         Thread.sleep(1000);
         //发送消息
         mqttClient.publish("hello world!".getBytes(StandardCharsets.UTF_8), "testMqttClient", MqttQoS.EXACTLY_ONCE);
