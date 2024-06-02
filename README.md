@@ -102,9 +102,9 @@ Interceptor：拦截器，仅支持拦截MqttClient、MqttConnector、MqttDelega
 ```
 
 ```
-		//非阻塞连接
-		MqttFutureWrapper connectFuture = mqttClient.connectFuture();
-		//阻塞至连接完成
+	//非阻塞连接
+	MqttFutureWrapper connectFuture = mqttClient.connectFuture();
+	//阻塞至连接完成
         connectFuture.awaitComplete();
 ```
 
@@ -116,16 +116,16 @@ Interceptor：拦截器，仅支持拦截MqttClient、MqttConnector、MqttDelega
 ```
 
 ```
-		//非阻塞断开连接
-		MqttFutureWrapper disconnectFuture = mqttClient.disconnectFuture();
-		//阻塞至断开连接完成
+	//非阻塞断开连接
+	MqttFutureWrapper disconnectFuture = mqttClient.disconnectFuture();
+	//阻塞至断开连接完成
         disconnectFuture.awaitComplete();
 ```
 
 关闭客户端：
 
-    		//关闭客户端，关闭之后无法再进行操作
-    		mqttClient.close();
+    	//关闭客户端，关闭之后无法再进行操作
+    	mqttClient.close();
 
 订阅：
 
