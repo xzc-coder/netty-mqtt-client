@@ -58,6 +58,10 @@ Interceptor：拦截器，仅支持拦截MqttClient、MqttConnector、MqttDelega
 
 8.支持消息持久化（目前支持Redis和内存），仅保存不清理会话且未完成的消息
 
+9.支持遗嘱消息
+
+10.支持QOS等级为：0、1、2
+
 ### 1.5 示例
 
 #### 客户端操作
