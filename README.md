@@ -243,6 +243,7 @@ MqttConnectParameter配置参数：
 | rootCertificateFile   | File        | 无         | 根证书文件                    |
 | clientPrivateKeyFile  | File        | 无         | 客户端私钥文件，双向SSL时需要    |
 | clientCertificateFile | File        | 无         | 客户端证书文件，双向SSL时需要   |
+
 注意：在SSL相关的参数中，rootCertificateFile不是必须的，前提是 Broker 的证书是权威CA认证的话就不需要，如果是自签名的证书就需要该文件；并且在双向认证中，如果你使用的是jks或pkcs后缀的文件（私钥和证书的结合体），那么请将其转换为证书和私钥两个文件。
 
 ## 2. 其它
