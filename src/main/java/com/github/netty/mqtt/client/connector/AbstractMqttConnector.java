@@ -13,6 +13,7 @@ import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 
 import javax.net.ssl.SSLException;
+import java.io.File;
 import java.net.InetSocketAddress;
 import java.util.Iterator;
 import java.util.Map;
@@ -62,8 +63,29 @@ public abstract class AbstractMqttConnector implements MqttConnector {
         return this.configuration;
     }
 
+    /**
+     * SSL处理
+     * @param allocator 内存分配器
+     * @return Ssl处理器
+     * @throws SSLException
+     */
     protected SslHandler getSslHandler(ByteBufAllocator allocator) throws SSLException {
-        final SslContext sslCtx = SslContext.newClientContext(InsecureTrustManagerFactory.INSTANCE);
+        boolean singleSsl = true;
+        File clientCertificateFile = mqttConnectParameter.getClientCertificateFile();
+        File clientPrivateKeyFile = mqttConnectParameter.getClientPrivateKeyFile();
+        File rootCertificateFile = mqttConnectParameter.getRootCertificateFile();
+        //客户端私钥和客户端证书都不为null才是双向认证
+        if(clientCertificateFile != null && clientPrivateKeyFile != null) {
+            singleSsl = false;
+        }
+        SslContext sslCtx;
+        if (singleSsl) {
+            //单向认证
+            sslCtx = SslContextBuilder.forClient().trustManager(rootCertificateFile).build();
+        }else {
+            //双向认证
+            sslCtx = SslContextBuilder.forClient().keyManager(clientCertificateFile, clientPrivateKeyFile).trustManager(rootCertificateFile).build();
+        }
         return sslCtx.newHandler(allocator, mqttConnectParameter.getHost(), mqttConnectParameter.getPort());
 
     }

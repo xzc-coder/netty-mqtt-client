@@ -13,6 +13,7 @@ import com.github.netty.mqtt.client.support.util.LogUtils;
 import io.netty.handler.codec.mqtt.MqttQoS;
 import redis.clients.jedis.JedisPool;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -29,11 +30,11 @@ public class MqttClientExample {
     public static void main(String[] args) throws IOException, InterruptedException {
         MqttClientFactory mqttClientFactory = new DefaultMqttClientFactory();
         //使用redis消息存储器
-        MqttMsgStore mqttMsgStore = new RedisMqttMsgStore(new JedisPool("127.0.0.1", 6379));
-        mqttClientFactory.setMqttMsgStore(mqttMsgStore);
-        //使用内存消息存储器
-//        MqttMsgStore mqttMsgStore = new MemoryMqttMsgStore();
+//        MqttMsgStore mqttMsgStore = new RedisMqttMsgStore(new JedisPool("127.0.0.1", 6379));
 //        mqttClientFactory.setMqttMsgStore(mqttMsgStore);
+        //使用内存消息存储器
+        MqttMsgStore mqttMsgStore = new MemoryMqttMsgStore();
+        mqttClientFactory.setMqttMsgStore(mqttMsgStore);
         //创建连接参数，设置客户端ID
         MqttConnectParameter mqttConnectParameter = new MqttConnectParameter("xzc_test");
         //是否自动重连

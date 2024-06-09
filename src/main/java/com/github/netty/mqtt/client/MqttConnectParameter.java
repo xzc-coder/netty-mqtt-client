@@ -5,6 +5,7 @@ import com.github.netty.mqtt.client.constant.MqttVersion;
 import com.github.netty.mqtt.client.msg.MqttWillMsg;
 import com.github.netty.mqtt.client.support.util.AssertUtils;
 
+import java.io.File;
 import java.io.Serializable;
 
 /**
@@ -74,6 +75,21 @@ public class MqttConnectParameter {
      * ssl，默认 false
      */
     private boolean ssl;
+
+    /**
+     * 根证书
+     * 如果服务器是权威CA颁发的证书，则不需要该证书文件;
+     * 如果是自签名的证书，需要给自签名的证书授权，必须填入该证书文件
+     */
+    private File rootCertificateFile;
+    /**
+     * 客户端的私钥文件
+     */
+    private File clientPrivateKeyFile;
+    /**
+     * 客户端的证书文件
+     */
+    private File clientCertificateFile;
 
 
     public MqttConnectParameter(String clientId) {
@@ -202,5 +218,29 @@ public class MqttConnectParameter {
         if (mqttVersion != null) {
             this.mqttVersion = mqttVersion;
         }
+    }
+
+    public File getRootCertificateFile() {
+        return rootCertificateFile;
+    }
+
+    public void setRootCertificateFile(File rootCertificateFile) {
+        this.rootCertificateFile = rootCertificateFile;
+    }
+
+    public File getClientPrivateKeyFile() {
+        return clientPrivateKeyFile;
+    }
+
+    public void setClientPrivateKeyFile(File clientPrivateKeyFile) {
+        this.clientPrivateKeyFile = clientPrivateKeyFile;
+    }
+
+    public File getClientCertificateFile() {
+        return clientCertificateFile;
+    }
+
+    public void setClientCertificateFile(File clientCertificateFile) {
+        this.clientCertificateFile = clientCertificateFile;
     }
 }
