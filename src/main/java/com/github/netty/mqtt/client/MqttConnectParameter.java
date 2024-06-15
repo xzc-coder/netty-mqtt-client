@@ -49,9 +49,20 @@ public class MqttConnectParameter {
     private MqttWillMsg willMsg;
 
     /**
-     * 重试间隔
+     * 重试间隔基本值，第一次会以该间隔重试，然后增加递增值，达到最大时，使用最大值
      */
     private long retryIntervalMillis = MqttConstant.DEFAULT_RETRY_INTERVAL_MILLIS;
+
+    /**
+     * 重试间隔递增值，重试失败后增加的间隔值
+     */
+    private long retryIntervalIncreaseMillis = MqttConstant.DEFAULT_MSG_RETRY_INCREASE_MILLS;
+
+    /**
+     * 重试间隔的最大值
+     */
+    private long retryIntervalMaxMillis = MqttConstant.DEFAULT_MSG_RETRY_MAX_MILLS;
+
 
     /**
      * 心跳间隔，默认 30秒，如果设置了自动重连，也是自动重连间隔
@@ -207,6 +218,26 @@ public class MqttConnectParameter {
     public void setRetryIntervalMillis(long retryIntervalMillis) {
         if (retryIntervalMillis > 0) {
             this.retryIntervalMillis = retryIntervalMillis;
+        }
+    }
+
+    public long getRetryIntervalIncreaseMillis() {
+        return retryIntervalIncreaseMillis;
+    }
+
+    public void setRetryIntervalIncreaseMillis(long retryIntervalIncreaseMillis) {
+        if(retryIntervalIncreaseMillis >= 0) {
+            this.retryIntervalIncreaseMillis = retryIntervalIncreaseMillis;
+        }
+    }
+
+    public long getRetryIntervalMaxMillis() {
+        return retryIntervalMaxMillis;
+    }
+
+    public void setRetryIntervalMaxMillis(long retryIntervalMaxMillis) {
+        if(retryIntervalMaxMillis > 0) {
+            this.retryIntervalMaxMillis = retryIntervalMaxMillis;
         }
     }
 

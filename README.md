@@ -56,11 +56,13 @@ Interceptor：拦截器，仅支持拦截MqttClient、MqttConnector、MqttDelega
 
 7.代码全中文注释
 
-8.支持消息持久化（目前支持Redis和内存），仅保存不清理会话且未完成的消息
+8.支持消息持久化（目前支持Redis和内存），仅保存不清理会话且未完成的客户端消息
 
 9.支持遗嘱消息
 
 10.支持QOS等级为：0、1、2
+
+11.支持自定义配置消息重试
 
 ### 1.5 示例
 
@@ -239,6 +241,8 @@ MqttConnectParameter配置参数：
 | password              | char[]      | 无         | MQTT的连接密码                   |
 | willMsg               | MqttWillMsg | 无         | MQTT的遗嘱消息                   |
 | retryIntervalMillis   | long        | 1000毫秒   | 消息重试器的重试间隔，单位毫秒   |
+| retryIntervalIncreaseMillis | long | 1000毫秒 | 每次消息重试失败时，增大其重试间隔值，单位毫秒 |
+| retryIntervalMaxMillis | long | 15000毫秒 | 重试间隔的最大值，单位毫秒 |
 | keepAliveTimeSeconds  | int         | 30秒       | MQTT心跳间隔，单位秒             |
 | connectTimeoutSeconds | long        | 30秒       | MQTT连接超时时间，单位秒         |
 | autoReconnect         | boolean     | false      | 是否自动重连                     |

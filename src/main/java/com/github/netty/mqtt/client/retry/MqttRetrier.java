@@ -1,5 +1,6 @@
 package com.github.netty.mqtt.client.retry;
 
+import com.github.netty.mqtt.client.MqttConnectParameter;
 import com.github.netty.mqtt.client.constant.MqttConstant;
 import com.github.netty.mqtt.client.support.future.MqttFuture;
 import com.github.netty.mqtt.client.support.util.AssertUtils;
@@ -21,8 +22,12 @@ public class MqttRetrier {
      */
     private final EventLoopGroup eventLoopGroup;
 
-    public MqttRetrier(EventLoopGroup eventLoopGroup) {
+    private final MqttConnectParameter mqttConnectParameter;
+
+    public MqttRetrier(MqttConnectParameter mqttConnectParameter,EventLoopGroup eventLoopGroup) {
+        AssertUtils.notNull(mqttConnectParameter, "mqttConnectParameter is null");
         AssertUtils.notNull(eventLoopGroup, "eventLoopGroup is null");
+        this.mqttConnectParameter = mqttConnectParameter;
         this.eventLoopGroup = eventLoopGroup;
     }
 
@@ -43,14 +48,24 @@ public class MqttRetrier {
                 if (!msgFuture.isDone()) {
                     task.run();
                     //下一次执行间隔
-                    long nextDelayMills = intervalMills + MqttConstant.MSG_RETRY_INCREASE_MILLS;
-                    if (nextDelayMills > MqttConstant.MSG_RETRY_MAX_MILLS) {
-                        nextDelayMills = MqttConstant.MSG_RETRY_MAX_MILLS;
+                    long nextDelayMills = intervalMills + mqttConnectParameter.getRetryIntervalIncreaseMillis();
+                    if (nextDelayMills > mqttConnectParameter.getRetryIntervalMaxMillis()) {
+                        nextDelayMills = mqttConnectParameter.getRetryIntervalMaxMillis();
                     }
                     retry(msgFuture, nextDelayMills, task, false);
                 }
             }, intervalMills, TimeUnit.MILLISECONDS);
         }
+    }
+
+    /**
+     * 重试
+     * @param msgFuture Future，用来判断是否完成
+     * @param task 要执行的任务
+     * @param nowExecute 是否立即执行
+     */
+    public void retry(MqttFuture msgFuture,Runnable task, boolean nowExecute) {
+        this.retry(msgFuture,mqttConnectParameter.getRetryIntervalMillis(),task,nowExecute);
     }
 
 }

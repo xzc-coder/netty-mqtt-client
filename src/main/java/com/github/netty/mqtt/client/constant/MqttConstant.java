@@ -100,7 +100,17 @@ public class MqttConstant {
     /**
      * 重试毫秒间隔
      */
-    public static final long DEFAULT_RETRY_INTERVAL_MILLIS = 1000L;
+    public static final long DEFAULT_RETRY_INTERVAL_MILLIS = 1000;
+
+    /**
+     * 默认的消息重试递增值
+     */
+    public static final long DEFAULT_MSG_RETRY_INCREASE_MILLS = 1000;
+
+    /**
+     * 默认的消息重试最大时间
+     */
+    public static final long DEFAULT_MSG_RETRY_MAX_MILLS = 15000;
 
     /**
      * 默认心跳间隔
@@ -125,19 +135,6 @@ public class MqttConstant {
      */
     public static final int DEFAULT_PORT = 1883;
 
-    /**
-     * 消息重试间隔，初始2000毫秒，每次失败+1000
-     */
-    public static final long MSG_RETRY_MILLS = 2000;
-    /**
-     * 默认的消息重试递增值
-     */
-    public static final long MSG_RETRY_INCREASE_MILLS = 1000;
-
-    /**
-     * 默认的消息重试最大时间
-     */
-    public static final long MSG_RETRY_MAX_MILLS = 15000;
 
     /**
      * 无效的消息ID值，用于qos 0的消息占位

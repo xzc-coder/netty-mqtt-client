@@ -72,7 +72,7 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
 
     public DefaultMqttClient(MqttConfiguration configuration, MqttConnectParameter mqttConnectParameter) {
         super(configuration, mqttConnectParameter);
-        mqttRetrier = new MqttRetrier(configuration.getEventLoopGroup());
+        mqttRetrier = new MqttRetrier(mqttConnectParameter,configuration.getEventLoopGroup());
     }
 
     @Override
@@ -351,7 +351,7 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
                 channelSupplier = this::getChannel;
             }
             MqttMsgRetryTask mqttMsgRetryTask = new MqttMsgRetryTask(channelSupplier, mqttMsg.getMsgId(), msgFuture);
-            mqttRetrier.retry(msgFuture, MqttConstant.MSG_RETRY_MILLS, mqttMsgRetryTask, false);
+            mqttRetrier.retry(msgFuture, mqttMsgRetryTask, false);
         }
         return msgFuture;
     }
@@ -594,7 +594,7 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
                                 int msgId = mqttMsg.getMsgId();
                                 MqttFuture msgFuture = new DefaultMqttFuture(clientId, msgId, mqttMsg);
                                 msgFuture.addListener(mqttFuture -> releaseMsgIdAndRemoveMsg(channel, mqttFuture, msgId, true));
-                                mqttRetrier.retry(msgFuture, MqttConstant.MSG_RETRY_MILLS, new MqttMsgRetryTask(this::getChannel, msgId, msgFuture), true);
+                                mqttRetrier.retry(msgFuture, new MqttMsgRetryTask(this::getChannel, msgId, msgFuture), true);
                             }
                         }
                     }
