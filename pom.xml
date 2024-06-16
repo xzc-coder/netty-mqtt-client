@@ -7,7 +7,7 @@
     <groupId>com.github</groupId>
     <artifactId>netty-mqtt-client</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.2-SNAPSHOT</version>
     <build>
         <plugins>
             <plugin>
