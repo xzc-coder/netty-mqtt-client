@@ -21,7 +21,7 @@ public class MqttSubInfo {
 
     public MqttSubInfo(String topic, MqttQoS qos) {
         AssertUtils.notNull(topic, "topic is null");
-        AssertUtils.notNull(topic, "qos is null");
+        AssertUtils.notNull(qos, "qos is null");
         this.topic = topic;
         this.qos = qos;
     }
