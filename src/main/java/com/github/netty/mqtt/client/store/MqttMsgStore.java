@@ -60,6 +60,15 @@ public interface MqttMsgStore {
 
 
     /**
+     * 清理客户端的MQTT消息
+     * @param clientId 客户端ID
+     */
+    default void clearMsg(String clientId) {
+        clearMsg(MqttMsgDirection.SEND,clientId);
+        clearMsg(MqttMsgDirection.RECEIVE,clientId);
+    }
+
+    /**
      * 关闭消息存储器
      */
     default void close() {

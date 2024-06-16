@@ -21,15 +21,34 @@ public class MqttConnectCallbackResult extends MqttCallbackResult {
      */
     private final Throwable cause;
 
+    /**
+     * 连接异常原因码
+     */
+    private final Byte connectReturnCode;
+
+    /**
+     * Broker 是否延续之前的会话
+     */
+    private final Boolean sessionPresent;
+
     public MqttConnectCallbackResult(String clientId, MqttAuthState mqttAuthState) {
         this(clientId,mqttAuthState,null);
     }
 
-    public MqttConnectCallbackResult(String clientId, MqttAuthState mqttAuthState, Throwable cause) {
+    public MqttConnectCallbackResult(String clientId, MqttAuthState mqttAuthState,Boolean sessionPresent) {
+        this(clientId,mqttAuthState,sessionPresent,null,null);
+    }
+
+    public MqttConnectCallbackResult(String clientId, MqttAuthState mqttAuthState, Throwable cause,Byte connectReturnCode) {
+        this(clientId,mqttAuthState,null,cause,connectReturnCode);
+    }
+    public MqttConnectCallbackResult(String clientId, MqttAuthState mqttAuthState,Boolean sessionPresent,Throwable cause,Byte connectReturnCode) {
         super(clientId);
         AssertUtils.notNull(mqttAuthState,"mqttAuthState is null");
         this.mqttAuthState = mqttAuthState;
+        this.sessionPresent = sessionPresent;
         this.cause = cause;
+        this.connectReturnCode = connectReturnCode;
     }
 
     public MqttAuthState getMqttAuthState() {
@@ -41,11 +60,22 @@ public class MqttConnectCallbackResult extends MqttCallbackResult {
     }
 
 
+    public Byte getConnectReturnCode() {
+        return connectReturnCode;
+    }
+
+    public Boolean getSessionPresent() {
+        return sessionPresent;
+    }
+
+
     @Override
     public String toString() {
         return "MqttConnectCallbackResult{" +
                 "mqttAuthState=" + mqttAuthState +
                 ", cause=" + cause +
+                ", connectReturnCode=" + connectReturnCode +
+                ", sessionPresent=" + sessionPresent +
                 "} " + super.toString();
     }
 }

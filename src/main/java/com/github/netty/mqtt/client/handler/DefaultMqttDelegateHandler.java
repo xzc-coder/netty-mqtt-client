@@ -101,6 +101,7 @@ public class DefaultMqttDelegateHandler implements MqttDelegateHandler {
     public void connack(Channel channel, MqttConnAckMessage mqttConnAckMessage) {
         String clientId = mqttConnectParameter.getClientId();
         MqttConnectReturnCode mqttConnectReturnCode = mqttConnAckMessage.variableHeader().connectReturnCode();
+        boolean sessionPresent = mqttConnAckMessage.variableHeader().isSessionPresent();
         //获取Future
         MqttFuture<Channel> connectMqttFuture = MqttFuture.getFuture(clientId, channel.id().asShortText());
         MqttConnectCallbackResult mqttConnectCallbackResult;
@@ -110,12 +111,16 @@ public class DefaultMqttDelegateHandler implements MqttDelegateHandler {
             //设置为已认证
             Attribute<MqttAuthState> mqttAuthStateAttribute = channel.attr(MqttConstant.AUTH_STATE_ATTRIBUTE_KEY);
             mqttAuthStateAttribute.set(MqttAuthState.AUTH_SUCCESS);
+            //当Broker返回会话不存在时，需要清除消息存储器中的消息
+            if(!sessionPresent) {
+                mqttMsgStore.clearMsg(mqttConnectParameter.getClientId());
+            }
             //设置成功
             if (connectMqttFuture != null) {
                 connectMqttFuture.setSuccess(channel);
             }
             //回调
-            mqttConnectCallbackResult = new MqttConnectCallbackResult(clientId, channel.attr(MqttConstant.AUTH_STATE_ATTRIBUTE_KEY).get());
+            mqttConnectCallbackResult = new MqttConnectCallbackResult(clientId, channel.attr(MqttConstant.AUTH_STATE_ATTRIBUTE_KEY).get(),sessionPresent);
             mqttCallback.connectCompleteCallback(mqttConnectCallbackResult);
         } else {
             String connectReturnCode = Integer.toString(mqttConnectReturnCode.byteValue(), com.github.netty.mqtt.client.constant.MqttConstant.NETTY_MQTT_CONNECT_RETURN_CODE_RADIX);
@@ -130,7 +135,7 @@ public class DefaultMqttDelegateHandler implements MqttDelegateHandler {
                 connectMqttFuture.setFailure(mqttException);
             }
             //唤醒
-            mqttConnectCallbackResult = new MqttConnectCallbackResult(clientId, channel.attr(MqttConstant.AUTH_STATE_ATTRIBUTE_KEY).get(), mqttException);
+            mqttConnectCallbackResult = new MqttConnectCallbackResult(clientId, channel.attr(MqttConstant.AUTH_STATE_ATTRIBUTE_KEY).get(), mqttException,mqttConnectReturnCode.byteValue());
             mqttCallback.connectCompleteCallback(mqttConnectCallbackResult);
             //关闭连接
             channel.close();
