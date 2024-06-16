@@ -244,6 +244,7 @@ MqttConnectParameter配置参数：
 | retryIntervalIncreaseMillis | long | 1000毫秒 | 每次消息重试失败时，增大其重试间隔值，单位毫秒 |
 | retryIntervalMaxMillis | long | 15000毫秒 | 重试间隔的最大值，单位毫秒 |
 | keepAliveTimeSeconds  | int         | 30秒       | MQTT心跳间隔，单位秒             |
+| keepAliveTimeCoefficient | BigDecimal | 0.75 | MQTT心跳间隔系数，由于某些Broker读超时时间为心跳间隔时间，中间发报文需要时间，可能在网络不好的情况下会导致超时，所以增加该系数，即发送心跳的时间为 心跳间隔 * 系数 ，默认0.75 |
 | connectTimeoutSeconds | long        | 30秒       | MQTT连接超时时间，单位秒         |
 | autoReconnect         | boolean     | false      | 是否自动重连                     |
 | cleanSession          | boolean     | true       | 是否清理会话                     |

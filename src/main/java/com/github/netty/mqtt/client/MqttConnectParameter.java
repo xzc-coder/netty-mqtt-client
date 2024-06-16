@@ -7,6 +7,7 @@ import com.github.netty.mqtt.client.support.util.AssertUtils;
 
 import java.io.File;
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 /**
  * @Date: 2023/1/3 16:47
@@ -68,6 +69,12 @@ public class MqttConnectParameter {
      * 心跳间隔，默认 30秒，如果设置了自动重连，也是自动重连间隔
      */
     private int keepAliveTimeSeconds = MqttConstant.DEFAULT_KEEP_ALIVE_TIME_SECONDS;
+
+    /**
+     * 心跳间隔的系数，默认0.75，执行心跳的定时任务会乘以该系数，因为网络传输有一定的间隔，特别是网络不好的情况，更需要该参数
+     */
+    private BigDecimal keepAliveTimeCoefficient = MqttConstant.DEFAULT_KEEP_ALIVE_TIME_COEFFICIENT;
+
     /**
      * 连接超时时间，默认 30秒
      */
@@ -273,5 +280,15 @@ public class MqttConnectParameter {
 
     public void setClientCertificateFile(File clientCertificateFile) {
         this.clientCertificateFile = clientCertificateFile;
+    }
+
+    public BigDecimal getKeepAliveTimeCoefficient() {
+        return keepAliveTimeCoefficient;
+    }
+
+    public void setKeepAliveTimeCoefficient(BigDecimal keepAliveTimeCoefficient) {
+        if(keepAliveTimeCoefficient != null && keepAliveTimeCoefficient.compareTo(BigDecimal.ZERO) > 0 && keepAliveTimeCoefficient.compareTo(BigDecimal.ONE) <= 0) {
+            this.keepAliveTimeCoefficient = keepAliveTimeCoefficient;
+        }
     }
 }

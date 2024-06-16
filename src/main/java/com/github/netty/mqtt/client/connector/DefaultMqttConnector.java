@@ -37,7 +37,7 @@ public class DefaultMqttConnector extends AbstractMqttConnector {
 
     public DefaultMqttConnector(MqttConfiguration configuration, MqttConnectParameter mqttConnectParameter, MqttCallback mqttCallback) {
         super(configuration, mqttConnectParameter, mqttCallback);
-        mqttChannelHandler = new MqttChannelHandler(mqttDelegateHandler, mqttConnectParameter.getKeepAliveTimeSeconds());
+        mqttChannelHandler = new MqttChannelHandler(mqttDelegateHandler, mqttConnectParameter);
         connectTimeoutMillis = (int) (mqttConnectParameter.getConnectTimeoutSeconds() * 1000);
         initNettyBootstrap();
     }
@@ -56,16 +56,14 @@ public class DefaultMqttConnector extends AbstractMqttConnector {
             protected void initChannel(NioSocketChannel ch) throws SSLException {
                 ChannelPipeline pipeline = ch.pipeline();
                 if (mqttConnectParameter.isSsl()) {
-                    pipeline.addLast(getSslHandler(ch.alloc()));
+                    pipeline.addLast(MqttConstant.NETTY_SSL_HANDLER_NAME,getSslHandler(ch.alloc()));
                 }
-                long keepAliveTimeSeconds = mqttConnectParameter.getKeepAliveTimeSeconds() + mqttConnectParameter.getKeepAliveTimeSeconds() >> 1;
-                //心跳检测
-                pipeline.addLast("idleStateHandler", new IdleStateHandler(keepAliveTimeSeconds, 0, 0, TimeUnit.SECONDS));
+                //空闲检测在连接完成后再添加
                 //Netty自带的编解码器
-                pipeline.addLast("mqttDecoder", new MqttDecoder());
-                pipeline.addLast("mqttEncoder", MqttEncoder.INSTANCE);
+                pipeline.addLast(MqttConstant.NETTY_DECODER_HANDLER_NAME, new MqttDecoder());
+                pipeline.addLast(MqttConstant.NETTY_ENCODER_HANDLER_NAME, MqttEncoder.INSTANCE);
                 //Mqtt协议处理
-                pipeline.addLast("mqttChannelHandler", mqttChannelHandler);
+                pipeline.addLast(MqttConstant.NETTY_CHANNEL_HANDLER_NAME, mqttChannelHandler);
             }
         });
     }

@@ -4,6 +4,7 @@ import com.github.netty.mqtt.client.msg.MqttMsg;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.DefaultThreadFactory;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -118,6 +119,11 @@ public class MqttConstant {
     public static final int DEFAULT_KEEP_ALIVE_TIME_SECONDS = 30;
 
     /**
+     * 默认的心跳间隔系数
+     */
+    public static final BigDecimal DEFAULT_KEEP_ALIVE_TIME_COEFFICIENT = new BigDecimal("0.75");
+
+    /**
      * 默认清理会话
      */
     public static final boolean DEFAULT_CLEAR_SESSION = true;
@@ -145,4 +151,24 @@ public class MqttConstant {
      * Netty中的线程池名
      */
     public static final String THREAD_FACTORY_POOL_NAME = "netty-mqtt-client-eventLoop";
+    /**
+     * Netty中添加的的SSL处理器名
+     */
+    public static final String NETTY_SSL_HANDLER_NAME = "sslHandler";
+    /**
+     * Netty中添加的的空闲检测处理器名
+     */
+    public static final String NETTY_IDLE_HANDLER_NAME = "idleStateHandler";
+    /**
+     * Netty中添加的的MQTT协议解码器名
+     */
+    public static final String NETTY_DECODER_HANDLER_NAME = "mqttDecoder";
+    /**
+     * Netty中添加的的MQTT协议编码器名
+     */
+    public static final String NETTY_ENCODER_HANDLER_NAME = "mqttEncoder";
+    /**
+     * Netty中添加的的MQTT处理器名
+     */
+    public static final String NETTY_CHANNEL_HANDLER_NAME = "mqttChannelHandler";
 }

@@ -1,6 +1,7 @@
 package com.github.netty.mqtt.client.handler.channel;
 
 
+import com.github.netty.mqtt.client.MqttConnectParameter;
 import com.github.netty.mqtt.client.constant.MqttConstant;
 import com.github.netty.mqtt.client.exception.MqttException;
 import com.github.netty.mqtt.client.handler.DefaultMqttDelegateHandler;
@@ -12,7 +13,9 @@ import io.netty.handler.codec.DecoderResult;
 import io.netty.handler.codec.mqtt.*;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.handler.timeout.IdleStateHandler;
 
+import java.math.BigDecimal;
 import java.net.SocketAddress;
 import java.util.concurrent.TimeUnit;
 
@@ -28,19 +31,17 @@ public class MqttChannelHandler extends SimpleChannelInboundHandler<MqttMessage>
      * MQTT消息委托器
      */
     private final MqttDelegateHandler mqttDelegateHandler;
-    /**
-     * 发送心跳的定时任务间隔，最好比心跳小一些
-     */
-    private final long keepAliveScheduleIntervalMillis;
-    /**
-     * 心跳定时任务的基数
-     */
-    private final float keepAliveScheduleBase = 0.75f;
 
-    public MqttChannelHandler(MqttDelegateHandler mqttDelegateHandler, long keepAliveTimeSecond) {
+    /**
+     * MQTT连接参数
+     */
+    private final MqttConnectParameter mqttConnectParameter;
+
+    public MqttChannelHandler(MqttDelegateHandler mqttDelegateHandler, MqttConnectParameter mqttConnectParameter) {
         AssertUtils.notNull(mqttDelegateHandler, "mqttDelegateHandler is null");
+        AssertUtils.notNull(mqttConnectParameter, "mqttConnectParameter is null");
         this.mqttDelegateHandler = mqttDelegateHandler;
-        this.keepAliveScheduleIntervalMillis = (long) (keepAliveTimeSecond * 1000 * keepAliveScheduleBase);
+        this.mqttConnectParameter = mqttConnectParameter;
     }
 
     @Override
@@ -64,20 +65,9 @@ public class MqttChannelHandler extends SimpleChannelInboundHandler<MqttMessage>
                 case CONNACK:
                     //连接确认
                     MqttConnAckMessage mqttConnAckMessage = (MqttConnAckMessage) mqttMessage;
-                    //成功则启动心跳定时任务
+                    //连接成功则继续处理
                     if (MqttConnectReturnCode.CONNECTION_ACCEPTED.equals(mqttConnAckMessage.variableHeader().connectReturnCode())) {
-                        //定时任务间隔，比心跳间隔小，因为执行回调等需要时间，线程可能再跑其他任务
-                        //心跳
-                        Runnable task = new Runnable() {
-                            @Override
-                            public void run() {
-                                if (channel.isActive()) {
-                                    mqttDelegateHandler.sendPingreq(ctx.channel());
-                                    channel.eventLoop().schedule(this, keepAliveScheduleIntervalMillis, TimeUnit.MILLISECONDS);
-                                }
-                            }
-                        };
-                        channel.eventLoop().schedule(task, keepAliveScheduleIntervalMillis, TimeUnit.MILLISECONDS);
+                        connectSuccessHandle(channel,mqttConnAckMessage);
                     }
                     mqttDelegateHandler.connack(channel, mqttConnAckMessage);
                     break;
@@ -139,6 +129,7 @@ public class MqttChannelHandler extends SimpleChannelInboundHandler<MqttMessage>
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent idleStateEvent = (IdleStateEvent) evt;
             if (IdleState.READER_IDLE == idleStateEvent.state()) {
+                LogUtils.warn(MqttChannelHandler.class, "client:" + mqttConnectParameter.getClientId() + " readOutTime,will disconnect.");
                 ctx.close();
             }
         }
@@ -189,5 +180,33 @@ public class MqttChannelHandler extends SimpleChannelInboundHandler<MqttMessage>
     @Override
     public void flush(ChannelHandlerContext ctx) throws Exception {
         ctx.flush();
+    }
+
+    /**
+     * MQTT连接成功处理
+     * @param channel channel
+     * @param mqttConnAckMessage MQTT连接确认消息
+     */
+    private void connectSuccessHandle(Channel channel, MqttConnAckMessage mqttConnAckMessage) {
+        //获取并设置心跳间隔
+        Integer keepAliveTimeSeconds = mqttConnectParameter.getKeepAliveTimeSeconds();
+        //1000要加L 不然会溢出
+        long keepAliveTimeMills = keepAliveTimeSeconds * 1000L;
+        //定时任务间隔
+        long scheduleMills = mqttConnectParameter.getKeepAliveTimeCoefficient().multiply(new BigDecimal(keepAliveTimeMills)).longValue();
+        long readIdleMills = keepAliveTimeMills + (keepAliveTimeMills >> 1);
+        //添加一个空闲检测处理器,读检测，即1.5倍的心跳时间内，没有读取到任何数据则断开连接
+        channel.pipeline().addBefore(MqttConstant.NETTY_DECODER_HANDLER_NAME,MqttConstant.NETTY_IDLE_HANDLER_NAME, new IdleStateHandler(readIdleMills, 0, 0, TimeUnit.MILLISECONDS));
+        //心跳定时任务间隔执行
+        Runnable task = new Runnable() {
+            @Override
+            public void run() {
+                if (channel.isActive()) {
+                    mqttDelegateHandler.sendPingreq(channel);
+                    channel.eventLoop().schedule(this, scheduleMills, TimeUnit.MILLISECONDS);
+                }
+            }
+        };
+        channel.eventLoop().schedule(task, scheduleMills, TimeUnit.MILLISECONDS);
     }
 }
