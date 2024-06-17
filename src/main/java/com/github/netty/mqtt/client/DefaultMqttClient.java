@@ -180,7 +180,7 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
 
     @Override
     public MqttFutureWrapper subscribesFuture(List<MqttSubInfo> mqttSubInfoList) {
-        AssertUtils.notEmpty(mqttSubInfoList, "mqttSubInfoList");
+        AssertUtils.notEmpty(mqttSubInfoList, "mqttSubInfoList is empty");
         LOCK.readLock().lock();
         try {
             Channel channel = currentChannel;
@@ -194,8 +194,8 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
 
     @Override
     public MqttFutureWrapper subscribesFuture(List<String> topicList, MqttQoS qos) {
-        AssertUtils.notEmpty(topicList, "topicList");
-        AssertUtils.notNull(qos, "qos");
+        AssertUtils.notEmpty(topicList, "topicList is empty");
+        AssertUtils.notNull(qos, "qos is null");
         List<MqttSubInfo> mqttSubInfoList = toSubInfoList(topicList, qos);
         MqttFutureWrapper subscribeFutureWrapper = subscribesFuture(mqttSubInfoList);
         return subscribeFutureWrapper;
@@ -203,8 +203,8 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
 
     @Override
     public MqttFutureWrapper subscribeFuture(String topic, MqttQoS qos) {
-        AssertUtils.notEmpty(topic, "topic");
-        AssertUtils.notNull(qos, "qos");
+        AssertUtils.notEmpty(topic, "topic is empty");
+        AssertUtils.notNull(qos, "qos is null");
         List<String> topicList = new ArrayList<>();
         topicList.add(topic);
         return subscribesFuture(topicList, qos);

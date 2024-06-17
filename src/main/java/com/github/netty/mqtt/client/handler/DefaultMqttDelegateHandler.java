@@ -176,7 +176,6 @@ public class DefaultMqttDelegateHandler implements MqttDelegateHandler {
         List<MqttTopicSubscription> mqttTopicSubscriptionList = toMqttTopicSubscriptionList(mqttSubMsg.getMqttSubInfoList());
         MqttSubscribePayload mqttSubscribePayload = new MqttSubscribePayload(mqttTopicSubscriptionList);
         MqttSubscribeMessage mqttSubscribeMessage = new MqttSubscribeMessage(mqttFixedHeader, mqttMessageIdVariableHeader, mqttSubscribePayload);
-        LogUtils.debug(DefaultMqttDelegateHandler.class, "client:" + clientId + ", send mqtt subscribe package：" + mqttSubscribeMessage);
         channel.writeAndFlush(mqttSubscribeMessage);
     }
 
@@ -340,6 +339,7 @@ public class DefaultMqttDelegateHandler implements MqttDelegateHandler {
         if (mqttMsg != null) {
             updateQos2MsgState(channel, msgId, MqttMsgState.PUBREL, MqttMsgDirection.SEND);
         } else {
+            LogUtils.warn(DefaultMqttDelegateHandler.class, "client: " + clientId + "received an unstored illegal pubrec packet with message ID " + msgId);
             mqttMsg = new MqttMsg(msgId, null, null, null, MqttMsgState.INVALID);
         }
         sendPubrel(channel, mqttMsg);
@@ -361,6 +361,7 @@ public class DefaultMqttDelegateHandler implements MqttDelegateHandler {
         if (mqttMsg != null) {
             mqttMsg.setMsgState(MqttMsgState.PUBCOMP);
         } else {
+            LogUtils.warn(DefaultMqttDelegateHandler.class, "client: " + clientId + "received an unstored illegal pubrel packet with message ID " + msgId);
             mqttMsg = new MqttMsg(msgId, null, null, null, MqttMsgState.INVALID);
         }
         sendPubcomp(channel, mqttMsg);
