@@ -436,7 +436,7 @@ public class DefaultMqttDelegateHandler implements MqttDelegateHandler {
         if (mqttConnectParameter.isCleanSession()) {
             channel.attr(MqttConstant.RECEIVE_MSG_MAP_ATTRIBUTE_KEY).get().put(mqttMsg.getMsgId(), mqttMsg);
         } else {
-            mqttMsgStore.putMsg(MqttMsgDirection.SEND, clientId, mqttMsg);
+            mqttMsgStore.putMsg(MqttMsgDirection.RECEIVE, clientId, mqttMsg);
         }
     }
 
