@@ -312,7 +312,7 @@ public class DefaultMqttDelegateHandler implements MqttDelegateHandler {
     public void puback(Channel channel, MqttPubAckMessage mqttPubAckMessage) {
         int msgId = mqttPubAckMessage.variableHeader().messageId();
         MqttFuture sendFuture = MqttFuture.getFuture(clientId, msgId);
-        MqttMsg mqttMsg = removeQos2Msg(channel, msgId, MqttMsgDirection.SEND);
+        MqttMsg mqttMsg = removeHighQosMsg(channel, msgId, MqttMsgDirection.SEND);
         if (sendFuture != null) {
             sendFuture.setSuccess(null);
         }
@@ -357,7 +357,7 @@ public class DefaultMqttDelegateHandler implements MqttDelegateHandler {
     public void pubrel(Channel channel, MqttMessage mqttMessage) {
         MqttMessageIdVariableHeader messageIdVariableHeader = (MqttMessageIdVariableHeader) mqttMessage.variableHeader();
         int msgId = messageIdVariableHeader.messageId();
-        MqttMsg mqttMsg = removeQos2Msg(channel, msgId, MqttMsgDirection.RECEIVE);
+        MqttMsg mqttMsg = removeHighQosMsg(channel, msgId, MqttMsgDirection.RECEIVE);
         if (mqttMsg != null) {
             mqttMsg.setMsgState(MqttMsgState.PUBCOMP);
         } else {
@@ -388,12 +388,13 @@ public class DefaultMqttDelegateHandler implements MqttDelegateHandler {
     public void pubcomp(Channel channel, MqttMessage mqttMessage) {
         MqttMessageIdVariableHeader messageIdVariableHeader = (MqttMessageIdVariableHeader) mqttMessage.variableHeader();
         int msgId = messageIdVariableHeader.messageId();
+        //pubcomp消息，则为客户端发送，删除
+        MqttMsg mqttMsg = removeHighQosMsg(channel, msgId, MqttMsgDirection.SEND);
+        //必须在移除之后，否则会被异步的兜底监听删除
         MqttFuture sendFuture = MqttFuture.getFuture(clientId, msgId);
         if (sendFuture != null) {
             sendFuture.setSuccess(null);
         }
-        //pubcomp消息，则为客户端发送，删除
-        MqttMsg mqttMsg = removeQos2Msg(channel, msgId, MqttMsgDirection.SEND);
         if (mqttMsg != null) {
             mqttMsg.setMsgState(MqttMsgState.PUBCOMP);
             //回调
@@ -440,7 +441,7 @@ public class DefaultMqttDelegateHandler implements MqttDelegateHandler {
         }
     }
 
-    private MqttMsg removeQos2Msg(Channel channel, int msgId, MqttMsgDirection msgDirection) {
+    private MqttMsg removeHighQosMsg(Channel channel, int msgId, MqttMsgDirection msgDirection) {
         MqttMsg mqttMsg = null;
         if (mqttConnectParameter.isCleanSession()) {
             if (msgDirection == MqttMsgDirection.SEND) {
