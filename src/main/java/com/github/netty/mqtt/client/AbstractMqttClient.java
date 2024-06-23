@@ -10,6 +10,7 @@ import com.github.netty.mqtt.client.store.MqttMsgIdCache;
 import com.github.netty.mqtt.client.store.MqttMsgStore;
 import com.github.netty.mqtt.client.support.util.AssertUtils;
 import com.github.netty.mqtt.client.support.util.EmptyUtils;
+import com.github.netty.mqtt.client.support.util.LogUtils;
 import io.netty.channel.Channel;
 
 import java.net.InetSocketAddress;
@@ -138,6 +139,7 @@ public abstract class AbstractMqttClient implements MqttClient {
         // cas设值，保证只执行一次关闭
         if (isClose.compareAndSet(false, true)) {
             try {
+                LogUtils.info(AbstractMqttClient.class,"client:" + getClientId() + " is shutting down");
                 doClose();
             } finally {
                 //释放客户端ID，以便之后还可以继续创建

@@ -153,7 +153,7 @@ public class MqttConfiguration {
     /**
      * 关闭配置，在关闭MqttClientFactory时调用，会释放线程资源
      */
-    public void close() {
+    public synchronized void close() {
         LogUtils.info(MqttConfiguration.class,"MqttConfiguration close");
         eventLoopGroup.shutdownGracefully().syncUninterruptibly();
         mqttMsgStore.close();

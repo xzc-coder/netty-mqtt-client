@@ -7,9 +7,11 @@ import com.github.netty.mqtt.client.plugin.Interceptor;
 import com.github.netty.mqtt.client.store.MqttMsgStore;
 import com.github.netty.mqtt.client.support.proxy.ProxyFactory;
 import com.github.netty.mqtt.client.support.util.AssertUtils;
+import com.github.netty.mqtt.client.support.util.LogUtils;
 import io.netty.channel.ChannelOption;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -104,8 +106,31 @@ public class DefaultMqttClientFactory implements MqttClientFactory {
     }
 
     @Override
-    public void close() {
-        this.mqttConfiguration.close();
+    public synchronized void close() {
+        try {
+            LogUtils.info(DefaultMqttClientFactory.class,"MqttClientFactory close");
+            closeClient();
+        }finally {
+            this.mqttConfiguration.close();
+        }
+    }
+
+    /**
+     * 关闭客户端
+     */
+    private void closeClient() {
+        Set<String> clientIdSet = MQTT_CLIENT_MAP.keySet();
+        for(String clientId : clientIdSet) {
+            MqttClient mqttClient = MQTT_CLIENT_MAP.get(clientId);
+            if(mqttClient != null && !mqttClient.isClose()) {
+                try {
+                    mqttClient.close();
+                }catch (Exception e) {
+                    LogUtils.warn(DefaultMqttClientFactory.class,"client:" + clientId + "close failed,cause : " + e.getMessage());
+                }
+            }
+        }
+
     }
 
 }
