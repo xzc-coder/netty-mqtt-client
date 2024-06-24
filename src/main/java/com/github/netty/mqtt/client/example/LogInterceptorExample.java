@@ -11,6 +11,7 @@ import com.github.netty.mqtt.client.plugin.Intercepts;
 import com.github.netty.mqtt.client.plugin.Invocation;
 import com.github.netty.mqtt.client.store.MemoryMqttMsgStore;
 import com.github.netty.mqtt.client.store.MqttMsgStore;
+import com.github.netty.mqtt.client.support.proxy.CglibProxyFactory;
 import com.github.netty.mqtt.client.support.util.LogUtils;
 import io.netty.handler.codec.mqtt.MqttQoS;
 
@@ -43,6 +44,7 @@ public class LogInterceptorExample implements Interceptor {
 
     public static void main(String[] args) throws IOException {
         MqttClientFactory mqttClientFactory = new DefaultMqttClientFactory();
+        mqttClientFactory.setProxyFactory(new CglibProxyFactory());
         MqttMsgStore mqttMsgStore = new MemoryMqttMsgStore();
         mqttClientFactory.setMqttMsgStore(mqttMsgStore);
         //添加拦截器
