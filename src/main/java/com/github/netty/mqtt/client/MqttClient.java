@@ -81,7 +81,7 @@ public interface MqttClient extends Endpoint {
     void disconnect(MqttDisconnectMsg mqttDisconnectMsg);
 
     /**
-     * 发送一个消息，不会阻塞（MQTT 5 带额外属性使用）
+     * 发送一个消息，不会阻塞（MQTT 5）
      *
      * @param mqttMsgInfo mqtt消息
      * @return MqttFutureWrapper
@@ -121,7 +121,7 @@ public interface MqttClient extends Endpoint {
 
 
     /**
-     * 发送一个消息，会阻塞至发送完成（MQTT 5 带额外属性使用）
+     * 发送一个消息，会阻塞至发送完成（MQTT 5）
      *
      * @param mqttMsgInfo mqtt消息
      */
@@ -262,7 +262,7 @@ public interface MqttClient extends Endpoint {
     MqttFutureWrapper subscribesFuture(List<MqttSubInfo> mqttSubInfoList);
 
     /**
-     * 取消订阅，会阻塞至消息发送完成
+     * 取消订阅，会阻塞至消息发送完成（MQTT 5）
      *
      * @param topicList          取消订阅的主题集合
      * @param mqttUserProperties 用户属性
@@ -277,7 +277,7 @@ public interface MqttClient extends Endpoint {
     void unsubscribes(List<String> topicList);
 
     /**
-     * 取消订阅，会阻塞至消息发送完成
+     * 取消订阅，会阻塞至消息发送完成（MQTT 5）
      *
      * @param topic              取消订阅的主题
      * @param mqttUserProperties 用户属性
@@ -292,7 +292,7 @@ public interface MqttClient extends Endpoint {
     void unsubscribe(String topic);
 
     /**
-     * 取消订阅，不会阻塞
+     * 取消订阅，不会阻塞（MQTT 5）
      *
      * @param topic              取消订阅的主题
      * @param mqttUserProperties 用户属性
@@ -318,7 +318,7 @@ public interface MqttClient extends Endpoint {
     MqttFutureWrapper unsubscribesFuture(List<String> topicList);
 
     /**
-     * 取消订阅，不会阻塞
+     * 取消订阅，不会阻塞（MQTT 5）
      *
      * @param topicList          取消订阅的主题集合
      * @param mqttUserProperties 用户属性

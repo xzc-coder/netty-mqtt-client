@@ -5,6 +5,7 @@ import com.github.netty.mqtt.client.exception.MqttException;
 import com.github.netty.mqtt.client.msg.MqttMsg;
 import com.github.netty.mqtt.client.support.util.AssertUtils;
 import com.github.netty.mqtt.client.support.util.EmptyUtils;
+import com.github.netty.mqtt.client.support.util.MqttUtils;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
@@ -51,7 +52,7 @@ public class RedisMqttMsgStore implements MqttMsgStore {
         try (Jedis jedis = jedisPool.getResource()) {
             byte[] key = getKey(mqttMsgDirection, clientId);
             byte[] field = String.valueOf(msgId).getBytes(StandardCharsets.UTF_8);
-            mqttMsg = deserialize(jedis.hget(key, field));
+            mqttMsg = MqttUtils.deserializableMsg(jedis.hget(key, field));
             return mqttMsg;
         }
     }
@@ -64,7 +65,7 @@ public class RedisMqttMsgStore implements MqttMsgStore {
         try (Jedis jedis = jedisPool.getResource()) {
             byte[] key = getKey(mqttMsgDirection, clientId);
             byte[] field = String.valueOf(mqttMsg.getMsgId()).getBytes(StandardCharsets.UTF_8);
-            jedis.hset(key, field, serialize(mqttMsg));
+            jedis.hset(key, field, MqttUtils.serializableMsg(mqttMsg));
         }
     }
 
@@ -76,7 +77,7 @@ public class RedisMqttMsgStore implements MqttMsgStore {
         try (Jedis jedis = jedisPool.getResource()) {
             byte[] key = getKey(mqttMsgDirection, clientId);
             byte[] field = String.valueOf(msgId).getBytes(StandardCharsets.UTF_8);
-            mqttMsg = deserialize(jedis.hget(key, field));
+            mqttMsg = MqttUtils.deserializableMsg(jedis.hget(key, field));
             jedis.hdel(key, field);
             return mqttMsg;
         }
@@ -92,10 +93,8 @@ public class RedisMqttMsgStore implements MqttMsgStore {
             Map<byte[], byte[]> msgMap = jedis.hgetAll(key);
             if (EmptyUtils.isNotEmpty(msgMap)) {
                 for (byte[] msgBytes : msgMap.values()) {
-                    MqttMsg mqttMsg = deserialize(msgBytes);
-                    if (mqttMsg != null) {
-                        mqttMsgList.add(mqttMsg);
-                    }
+                    MqttMsg mqttMsg = MqttUtils.deserializableMsg(msgBytes);
+                    mqttMsgList.add(mqttMsg);
                 }
             }
         }
@@ -117,41 +116,6 @@ public class RedisMqttMsgStore implements MqttMsgStore {
     public void close() {
         if (jedisPool != null) {
             jedisPool.close();
-        }
-    }
-
-    /**
-     * 把MQTT消息序列化
-     * @param mqttMsg MQTT消息
-     * @return 序列化后的二进制
-     */
-    private byte[] serialize(MqttMsg mqttMsg) {
-        if (mqttMsg == null) {
-            return null;
-        }
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
-            oos.writeObject(mqttMsg);
-            byte[] bytes = bos.toByteArray();
-            return bytes;
-        } catch (Exception e) {
-            throw new MqttException(e);
-        }
-    }
-
-
-    /**
-     * 把MQTT消息反序列化
-     * @param bytes 序列化后的二进制
-     * @return MQTT消息
-     */
-    private MqttMsg deserialize(byte[] bytes) {
-        if (bytes == null) {
-            return null;
-        }
-        try (ByteArrayInputStream bais = new ByteArrayInputStream(bytes); ObjectInputStream ois = new ObjectInputStream(bais)) {
-            return (MqttMsg) ois.readObject();
-        } catch (Exception e) {
-            throw new MqttException(e);
         }
     }
 
