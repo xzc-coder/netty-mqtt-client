@@ -1,6 +1,7 @@
 package com.github.netty.mqtt.client.callback;
 
 import com.github.netty.mqtt.client.support.util.AssertUtils;
+import io.netty.handler.codec.mqtt.MqttProperties;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +13,13 @@ import java.util.List;
  */
 public class MqttSubscribeCallbackResult extends MqttCallbackResult {
 
+    /**
+     * 订阅回调消息集合
+     */
     private final List<MqttSubscribeCallbackInfo> subscribeCallbackInfoList = new ArrayList<>();
+    /**
+     * 消息ID
+     */
     private final int msgId;
 
     public MqttSubscribeCallbackResult(String clientId,int msgId,List<MqttSubscribeCallbackInfo> subscribeCallbackInfoList) {
@@ -28,6 +35,19 @@ public class MqttSubscribeCallbackResult extends MqttCallbackResult {
 
     public int getMsgId() {
         return msgId;
+    }
+
+    /**
+     * MQTT5
+     * 获取原因字符串
+     * @return 原因字符串
+     */
+    public String getReasonString() {
+        String reasonString = null;
+        if(mqttProperties != null) {
+            reasonString = getStringMqttPropertyValue(MqttProperties.MqttPropertyType.REASON_STRING);
+        }
+        return reasonString;
     }
 
     @Override

@@ -11,7 +11,6 @@ import io.netty.channel.ChannelOption;
 import java.util.List;
 
 
-
 /**
  * @Date: 2023/8/25 10:11
  * @Description: MQTT客户端工厂
@@ -93,6 +92,7 @@ public interface MqttClientFactory {
 
     /**
      * 添加或删除一个Netty的TCP配置项（value为null时为删除）
+     *
      * @param option
      * @param value
      */

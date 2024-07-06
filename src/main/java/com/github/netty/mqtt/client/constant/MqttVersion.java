@@ -8,7 +8,9 @@ package com.github.netty.mqtt.client.constant;
 public enum MqttVersion {
 
     /**
-     * MQTT版本 目前只有一个
+     * MQTT版本
      */
-    MQTT_3_1_1;
+    MQTT_3_1_1,
+    MQTT_5_0_0,
+    ;
 }

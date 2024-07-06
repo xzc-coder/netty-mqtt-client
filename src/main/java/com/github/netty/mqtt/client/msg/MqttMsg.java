@@ -1,12 +1,15 @@
 package com.github.netty.mqtt.client.msg;
 
 
+import com.github.netty.mqtt.client.constant.MqttConstant;
 import com.github.netty.mqtt.client.constant.MqttMsgDirection;
 import com.github.netty.mqtt.client.constant.MqttMsgState;
+import io.netty.handler.codec.mqtt.MqttProperties;
 import io.netty.handler.codec.mqtt.MqttQoS;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * @Date: 2023/8/24 14:17
@@ -16,24 +19,24 @@ import java.util.Arrays;
 public class MqttMsg implements Serializable {
 
 
-    private static final long serialVersionUID = 8823986273348138027L;
+    private static final long serialVersionUID = 8823986273348138028L;
 
     /**
      * 消息ID
      */
-    private final Integer msgId;
+    private Integer msgId;
     /**
      * 主题
      */
-    private final String topic;
+    private String topic;
     /**
      * qos
      */
-    private final MqttQoS qos;
+    private MqttQoS qos;
     /**
-     * 是否保存
+     * 是否保留消息
      */
-    private final boolean retain;
+    private boolean retain;
     /**
      * 消息状态
      */
@@ -41,17 +44,33 @@ public class MqttMsg implements Serializable {
     /**
      * 载荷
      */
-    private final byte[] payload;
+    private byte[] payload;
 
+    /**
+     * 是否重复发送
+     */
     private boolean dup;
     /**
      * 消息方向
      */
     private MqttMsgDirection mqttMsgDirection;
+
+    /**
+     * MQTT5
+     * 发布消息属性，不序列化
+     */
+    private transient MqttProperties mqttProperties;
+
+    /**
+     * 原因码
+     */
+    private byte reasonCode;
+
     /**
      * 创建时间戳
      */
     private long createTimestamp;
+
 
     public MqttMsg(int msgId, String topic) {
         this(msgId, new byte[0], topic);
@@ -103,6 +122,7 @@ public class MqttMsg implements Serializable {
         this.dup = dup;
         this.msgState = msgState;
         this.mqttMsgDirection = mqttMsgDirection;
+        this.reasonCode = MqttConstant.MESSAGE_SUCCESS_REASON_CODE;
         this.createTimestamp = System.currentTimeMillis();
     }
 
@@ -154,23 +174,58 @@ public class MqttMsg implements Serializable {
         return createTimestamp;
     }
 
+    public void setMsgId(Integer msgId) {
+        this.msgId = msgId;
+    }
+
+    public void setTopic(String topic) {
+        this.topic = topic;
+    }
+
+    public void setQos(MqttQoS qos) {
+        this.qos = qos;
+    }
+
+    public void setRetain(boolean retain) {
+        this.retain = retain;
+    }
+
+    public void setPayload(byte[] payload) {
+        this.payload = payload;
+    }
+
     public void setCreateTimestamp(long createTimestamp) {
         this.createTimestamp = createTimestamp;
     }
 
+    public MqttProperties getMqttProperties() {
+        return mqttProperties;
+    }
+
+    public void setMqttProperties(MqttProperties mqttProperties) {
+        this.mqttProperties = mqttProperties;
+    }
+
+    public byte getReasonCode() {
+        return reasonCode;
+    }
+
+    public void setReasonCode(byte reasonCode) {
+        this.reasonCode = reasonCode;
+    }
 
     @Override
-    public String toString() {
-        return "MqttMsg{" +
-                "msgId=" + msgId +
-                ", topic='" + topic + '\'' +
-                ", qos=" + qos +
-                ", retain=" + retain +
-                ", msgState=" + msgState +
-                ", payload=" + Arrays.toString(payload) +
-                ", dup=" + dup +
-                ", mqttMsgDirection=" + mqttMsgDirection +
-                ", createTimestamp=" + createTimestamp +
-                '}';
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof MqttMsg)) return false;
+        MqttMsg mqttMsg = (MqttMsg) o;
+        return retain == mqttMsg.retain && dup == mqttMsg.dup && reasonCode == mqttMsg.reasonCode && createTimestamp == mqttMsg.createTimestamp && Objects.equals(msgId, mqttMsg.msgId) && Objects.equals(topic, mqttMsg.topic) && qos == mqttMsg.qos && msgState == mqttMsg.msgState && Arrays.equals(payload, mqttMsg.payload) && mqttMsgDirection == mqttMsg.mqttMsgDirection && Objects.equals(mqttProperties, mqttMsg.mqttProperties);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(msgId, topic, qos, retain, msgState, dup, mqttMsgDirection, mqttProperties, reasonCode, createTimestamp);
+        result = 31 * result + Arrays.hashCode(payload);
+        return result;
     }
 }

@@ -16,6 +16,9 @@ public class MqttDelegateHandlerObjectCreator implements ObjectCreator<MqttDeleg
 
     @Override
     public MqttDelegateHandler createObject(Object... constructorArgs) {
-        return new DefaultMqttDelegateHandler((MqttConnectParameter) constructorArgs[0], (MqttCallback) constructorArgs[1], (MqttMsgStore) constructorArgs[2]);
+        MqttConnectParameter mqttConnectParameter = (MqttConnectParameter) constructorArgs[0];
+        MqttCallback mqttCallback = (MqttCallback) constructorArgs[1];
+        MqttMsgStore mqttMsgStore = (MqttMsgStore) constructorArgs[2];
+        return new DefaultMqttDelegateHandler(mqttConnectParameter,mqttCallback,mqttMsgStore);
     }
 }

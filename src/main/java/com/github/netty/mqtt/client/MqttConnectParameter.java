@@ -1,13 +1,17 @@
 package com.github.netty.mqtt.client;
 
+import com.github.netty.mqtt.client.connector.MqttAuthenticator;
 import com.github.netty.mqtt.client.constant.MqttConstant;
 import com.github.netty.mqtt.client.constant.MqttVersion;
 import com.github.netty.mqtt.client.msg.MqttWillMsg;
 import com.github.netty.mqtt.client.support.util.AssertUtils;
+import io.netty.handler.codec.mqtt.MqttProperties;
 
 import java.io.File;
-import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @Date: 2023/1/3 16:47
@@ -64,7 +68,6 @@ public class MqttConnectParameter {
      */
     private long retryIntervalMaxMillis = MqttConstant.DEFAULT_MSG_RETRY_MAX_MILLS;
 
-
     /**
      * 心跳间隔，默认 30秒，如果设置了自动重连，也是自动重连间隔
      */
@@ -109,6 +112,71 @@ public class MqttConnectParameter {
      */
     private File clientCertificateFile;
 
+    /**
+     * MQTT5
+     * 会话过期间隔 单位 秒
+     */
+    private Integer sessionExpiryIntervalSeconds;
+
+    /**
+     * MQTT5
+     * 认证方法
+     */
+    private String authenticationMethod;
+
+    /**
+     * MQTT5
+     * 数据
+     */
+    private byte[] authenticationData;
+
+    /**
+     * MQTT5
+     * 请求问题信息标识符
+     */
+    private Integer requestProblemInformation = MqttConstant.DEFAULT_REQUEST_PROBLEM_INFORMATION;
+
+    /**
+     * MQTT5
+     * 请求响应标识符
+     */
+    private Integer requestResponseInformation = MqttConstant.DEFAULT_REQUEST_RESPONSE_INFORMATION;
+
+    /**
+     * MQTT5
+     * 响应信息
+     */
+    private String responseInformation;
+
+    /**
+     * MQTT5
+     * 接收最大数量
+     */
+    private Integer receiveMaximum;
+
+    /**
+     * MQTT5
+     * 主题别名最大长度
+     */
+    private Integer topicAliasMaximum;
+
+    /**
+     * MQTT5
+     * 最大报文长度
+     */
+    private Integer maximumPacketSize;
+
+    /**
+     * MQTT5
+     * 用户属性
+     */
+    private final MqttProperties.UserProperties mqttUserProperties = new MqttProperties.UserProperties();
+
+    /**
+     * MQTT5
+     * 认证器，当有认证方法时使用
+     */
+    private MqttAuthenticator mqttAuthenticator;
 
     public MqttConnectParameter(String clientId) {
         AssertUtils.notNull(clientId, "clientId is null");
@@ -228,26 +296,6 @@ public class MqttConnectParameter {
         }
     }
 
-    public long getRetryIntervalIncreaseMillis() {
-        return retryIntervalIncreaseMillis;
-    }
-
-    public void setRetryIntervalIncreaseMillis(long retryIntervalIncreaseMillis) {
-        if(retryIntervalIncreaseMillis >= 0) {
-            this.retryIntervalIncreaseMillis = retryIntervalIncreaseMillis;
-        }
-    }
-
-    public long getRetryIntervalMaxMillis() {
-        return retryIntervalMaxMillis;
-    }
-
-    public void setRetryIntervalMaxMillis(long retryIntervalMaxMillis) {
-        if(retryIntervalMaxMillis > 0) {
-            this.retryIntervalMaxMillis = retryIntervalMaxMillis;
-        }
-    }
-
     public MqttVersion getMqttVersion() {
         return mqttVersion;
     }
@@ -256,6 +304,157 @@ public class MqttConnectParameter {
         if (mqttVersion != null) {
             this.mqttVersion = mqttVersion;
         }
+    }
+
+    public Integer getSessionExpiryIntervalSeconds() {
+        return sessionExpiryIntervalSeconds;
+    }
+
+    public void setSessionExpiryIntervalSeconds(Integer sessionExpiryIntervalSeconds) {
+        this.sessionExpiryIntervalSeconds = sessionExpiryIntervalSeconds;
+    }
+
+    public String getAuthenticationMethod() {
+        return authenticationMethod;
+    }
+
+    public void setAuthenticationMethod(String authenticationMethod) {
+        this.authenticationMethod = authenticationMethod;
+    }
+
+    public byte[] getAuthenticationData() {
+        return authenticationData;
+    }
+
+    public void setAuthenticationData(byte[] authenticationData) {
+        this.authenticationData = authenticationData;
+    }
+
+    public Integer getRequestProblemInformation() {
+        return requestProblemInformation;
+    }
+
+    public void setRequestProblemInformation(Integer requestProblemInformation) {
+        this.requestProblemInformation = requestProblemInformation;
+    }
+
+    public String getResponseInformation() {
+        return responseInformation;
+    }
+
+    public void setResponseInformation(String responseInformation) {
+        this.responseInformation = responseInformation;
+    }
+
+    public Integer getReceiveMaximum() {
+        return receiveMaximum;
+    }
+
+    public void setReceiveMaximum(Integer receiveMaximum) {
+        this.receiveMaximum = receiveMaximum;
+    }
+
+    public Integer getTopicAliasMaximum() {
+        return topicAliasMaximum;
+    }
+
+    public void setTopicAliasMaximum(Integer topicAliasMaximum) {
+        this.topicAliasMaximum = topicAliasMaximum;
+    }
+
+    public Integer getMaximumPacketSize() {
+        return maximumPacketSize;
+    }
+
+    public void setMaximumPacketSize(Integer maximumPacketSize) {
+        this.maximumPacketSize = maximumPacketSize;
+    }
+
+
+    public MqttProperties.UserProperties getMqttUserProperties() {
+        return mqttUserProperties;
+    }
+
+
+    /**
+     * MQTT5
+     * 添加一个MQTT用户属性
+     *
+     * @param key   key
+     * @param value value
+     */
+    public void addMqttUserProperty(String key, String value) {
+        if (key != null && value != null) {
+            mqttUserProperties.add(key, value);
+        }
+    }
+
+    /**
+     * MQTT5
+     * 添加一个MQTT用户属性
+     *
+     * @param stringPair key value对象
+     */
+    public void addMqttUserProperty(MqttProperties.StringPair stringPair) {
+        if (stringPair != null) {
+            mqttUserProperties.add(stringPair);
+        }
+    }
+
+    /**
+     * MQTT5
+     * 添加一个MQTT用户属性
+     *
+     * @param mqttUserProperties MQTT用户属性
+     */
+    private void addMqttUserProperties(MqttProperties.UserProperties mqttUserProperties) {
+        if (mqttUserProperties != null) {
+            for (MqttProperties.StringPair stringPair : mqttUserProperties.value()) {
+                this.mqttUserProperties.add(stringPair);
+            }
+        }
+    }
+
+    public Integer getRequestResponseInformation() {
+        return requestResponseInformation;
+    }
+
+    public void setRequestResponseInformation(Integer requestResponseInformation) {
+        this.requestResponseInformation = requestResponseInformation;
+    }
+
+    public MqttAuthenticator getMqttAuthenticator() {
+        return mqttAuthenticator;
+    }
+
+    public void setMqttAuthenticator(MqttAuthenticator mqttAuthenticator) {
+        this.mqttAuthenticator = mqttAuthenticator;
+    }
+
+    public BigDecimal getKeepAliveTimeCoefficient() {
+        return keepAliveTimeCoefficient;
+    }
+
+    public void setKeepAliveTimeCoefficient(BigDecimal keepAliveTimeCoefficient) {
+        if (keepAliveTimeCoefficient != null && keepAliveTimeCoefficient.compareTo(BigDecimal.ZERO) > 0) {
+            this.keepAliveTimeCoefficient = keepAliveTimeCoefficient;
+        }
+    }
+
+    public long getRetryIntervalIncreaseMillis() {
+        return retryIntervalIncreaseMillis;
+    }
+
+    public void setRetryIntervalIncreaseMillis(long retryIntervalIncreaseMillis) {
+        this.retryIntervalIncreaseMillis = retryIntervalIncreaseMillis;
+    }
+
+    public long getRetryIntervalMaxMillis() {
+        return retryIntervalMaxMillis;
+    }
+
+    public void setRetryIntervalMaxMillis(long retryIntervalMaxMillis) {
+        this.retryIntervalMaxMillis = retryIntervalMaxMillis;
     }
 
     public File getRootCertificateFile() {
@@ -282,13 +481,39 @@ public class MqttConnectParameter {
         this.clientCertificateFile = clientCertificateFile;
     }
 
-    public BigDecimal getKeepAliveTimeCoefficient() {
-        return keepAliveTimeCoefficient;
-    }
-
-    public void setKeepAliveTimeCoefficient(BigDecimal keepAliveTimeCoefficient) {
-        if(keepAliveTimeCoefficient != null && keepAliveTimeCoefficient.compareTo(BigDecimal.ZERO) > 0 && keepAliveTimeCoefficient.compareTo(BigDecimal.ONE) <= 0) {
-            this.keepAliveTimeCoefficient = keepAliveTimeCoefficient;
-        }
+    @Override
+    public String toString() {
+        return "MqttConnectParameter{" +
+                "clientId='" + clientId + '\'' +
+                ", mqttVersion=" + mqttVersion +
+                ", host='" + host + '\'' +
+                ", port=" + port +
+                ", username='" + username + '\'' +
+                ", password=" + Arrays.toString(password) +
+                ", willMsg=" + willMsg +
+                ", retryIntervalMillis=" + retryIntervalMillis +
+                ", retryIntervalIncreaseMillis=" + retryIntervalIncreaseMillis +
+                ", retryIntervalMaxMillis=" + retryIntervalMaxMillis +
+                ", keepAliveTimeSeconds=" + keepAliveTimeSeconds +
+                ", keepAliveTimeCoefficient=" + keepAliveTimeCoefficient +
+                ", connectTimeoutSeconds=" + connectTimeoutSeconds +
+                ", autoReconnect=" + autoReconnect +
+                ", cleanSession=" + cleanSession +
+                ", ssl=" + ssl +
+                ", rootCertificateFile=" + rootCertificateFile +
+                ", clientPrivateKeyFile=" + clientPrivateKeyFile +
+                ", clientCertificateFile=" + clientCertificateFile +
+                ", sessionExpiryIntervalSeconds=" + sessionExpiryIntervalSeconds +
+                ", authenticationMethod='" + authenticationMethod + '\'' +
+                ", authenticationData=" + Arrays.toString(authenticationData) +
+                ", requestProblemInformation=" + requestProblemInformation +
+                ", requestResponseInformation=" + requestResponseInformation +
+                ", responseInformation='" + responseInformation + '\'' +
+                ", receiveMaximum=" + receiveMaximum +
+                ", topicAliasMaximum=" + topicAliasMaximum +
+                ", maximumPacketSize=" + maximumPacketSize +
+                ", mqttUserProperties=" + mqttUserProperties +
+                ", mqttAuthenticator=" + mqttAuthenticator +
+                '}';
     }
 }

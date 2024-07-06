@@ -2,10 +2,7 @@ package com.github.netty.mqtt.client;
 
 import com.github.netty.mqtt.client.callback.*;
 import com.github.netty.mqtt.client.connector.MqttConnector;
-import com.github.netty.mqtt.client.constant.MqttAuthState;
-import com.github.netty.mqtt.client.constant.MqttConstant;
-import com.github.netty.mqtt.client.constant.MqttMsgState;
-import com.github.netty.mqtt.client.constant.MqttMsgDirection;
+import com.github.netty.mqtt.client.constant.*;
 import com.github.netty.mqtt.client.exception.MqttStateCheckException;
 import com.github.netty.mqtt.client.exception.MqttException;
 import com.github.netty.mqtt.client.msg.*;
@@ -18,8 +15,10 @@ import com.github.netty.mqtt.client.support.future.MqttFutureWrapper;
 import com.github.netty.mqtt.client.support.util.AssertUtils;
 import com.github.netty.mqtt.client.support.util.EmptyUtils;
 import com.github.netty.mqtt.client.support.util.LogUtils;
+import com.github.netty.mqtt.client.support.util.MqttUtils;
 import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
+import io.netty.handler.codec.mqtt.MqttProperties;
 import io.netty.handler.codec.mqtt.MqttQoS;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
@@ -106,6 +105,12 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
 
     @Override
     public MqttFutureWrapper disconnectFuture() {
+        return disconnectFuture(new MqttDisconnectMsg());
+    }
+
+    @Override
+    public MqttFutureWrapper disconnectFuture(MqttDisconnectMsg mqttDisconnectMsg) {
+        AssertUtils.notNull(mqttDisconnectMsg, "mqttDisconnectMsg is null");
         LOCK.writeLock().lock();
         try {
             closeCheck();
@@ -117,7 +122,7 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
             MqttFuture mqttFuture = new DefaultMqttFuture(clientId, new Object());
             if (isOnline(channel)) {
                 //在线，发送MQTT断开包，正常断开
-                mqttDelegateHandler.sendDisconnect(channel, mqttFuture);
+                mqttDelegateHandler.sendDisconnect(channel, mqttFuture, mqttDisconnectMsg);
             } else {
                 //正在连接中，直接关闭
                 isConnected(channel);
@@ -136,21 +141,28 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
     }
 
     @Override
-    public MqttFutureWrapper publishFuture(byte[] payload, String topic, MqttQoS qos, boolean retain) {
-        AssertUtils.notNull(payload, "payload is null");
-        AssertUtils.notEmpty(topic, "topic is empty");
-        AssertUtils.notNull(qos, "qos is null");
+    public void disconnect(MqttDisconnectMsg mqttDisconnectMsg) {
+        disconnectFuture(mqttDisconnectMsg).syncUninterruptibly();
+    }
+
+    @Override
+    public MqttFutureWrapper publishFuture(MqttMsgInfo mqttMsgInfo) {
         LOCK.readLock().lock();
         try {
             Channel channel = currentChannel;
             //发送发布消息之前进行检查
-            sendMsgCheck(channel, qos);
+            sendMsgCheck(channel, mqttMsgInfo.getQos());
             //执行发布消息
-            MqttFuture msgFuture = doPublish(channel, payload, topic, qos, retain);
+            MqttFuture msgFuture = doPublish(channel, mqttMsgInfo);
             return new MqttFutureWrapper(msgFuture);
         } finally {
             LOCK.readLock().unlock();
         }
+    }
+
+    @Override
+    public MqttFutureWrapper publishFuture(byte[] payload, String topic, MqttQoS qos, boolean retain) {
+        return publishFuture(new MqttMsgInfo(topic, payload, qos, retain));
     }
 
     @Override
@@ -161,6 +173,11 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
     @Override
     public MqttFutureWrapper publishFuture(byte[] payload, String topic) {
         return publishFuture(payload, topic, MqttQoS.AT_MOST_ONCE);
+    }
+
+    @Override
+    public void publish(MqttMsgInfo mqttMsgInfo) {
+        publishFuture(mqttMsgInfo).syncUninterruptibly();
     }
 
     @Override
@@ -180,17 +197,9 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
 
     @Override
     public MqttFutureWrapper subscribesFuture(List<MqttSubInfo> mqttSubInfoList) {
-        AssertUtils.notEmpty(mqttSubInfoList, "mqttSubInfoList is empty");
-        LOCK.readLock().lock();
-        try {
-            Channel channel = currentChannel;
-            subscribeCheck(channel, mqttSubInfoList);
-            MqttFuture subscribeFuture = doSubscribeFuture(channel, mqttSubInfoList);
-            return new MqttFutureWrapper(subscribeFuture);
-        } finally {
-            LOCK.readLock().unlock();
-        }
+        return this.subscribesFuture(mqttSubInfoList, null, null);
     }
+
 
     @Override
     public MqttFutureWrapper subscribesFuture(List<String> topicList, MqttQoS qos) {
@@ -203,17 +212,45 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
 
     @Override
     public MqttFutureWrapper subscribeFuture(String topic, MqttQoS qos) {
-        AssertUtils.notEmpty(topic, "topic is empty");
-        AssertUtils.notNull(qos, "qos is null");
-        List<String> topicList = new ArrayList<>();
-        topicList.add(topic);
-        return subscribesFuture(topicList, qos);
+        return subscribeFuture(new MqttSubInfo(topic, qos), null, null);
+    }
+
+    @Override
+    public MqttFutureWrapper subscribeFuture(MqttSubInfo mqttSubInfo) {
+        return subscribeFuture(mqttSubInfo, null, null);
+    }
+
+    @Override
+    public MqttFutureWrapper subscribeFuture(MqttSubInfo mqttSubInfo, Integer subscriptionIdentifier, MqttProperties.UserProperties mqttUserProperties) {
+        AssertUtils.notNull(mqttSubInfo, "mqttSubInfo is null");
+        List<MqttSubInfo> mqttSubInfoList = new ArrayList<>(1);
+        mqttSubInfoList.add(mqttSubInfo);
+        return subscribesFuture(mqttSubInfoList, subscriptionIdentifier, mqttUserProperties);
+    }
+
+    @Override
+    public MqttFutureWrapper subscribesFuture(List<MqttSubInfo> mqttSubInfoList, Integer subscriptionIdentifier, MqttProperties.UserProperties mqttUserProperties) {
+        AssertUtils.notEmpty(mqttSubInfoList, "mqttSubInfoList is empty");
+        LOCK.readLock().lock();
+        try {
+            Channel channel = currentChannel;
+            subscribeCheck(channel, mqttSubInfoList);
+            MqttFuture subscribeFuture = doSubscribeFuture(channel, mqttSubInfoList, subscriptionIdentifier, mqttUserProperties);
+            return new MqttFutureWrapper(subscribeFuture);
+        } finally {
+            LOCK.readLock().unlock();
+        }
     }
 
 
     @Override
     public void subscribes(List<MqttSubInfo> mqttSubInfoList) {
         subscribesFuture(mqttSubInfoList).syncUninterruptibly();
+    }
+
+    @Override
+    public void subscribes(List<MqttSubInfo> mqttSubInfoList, Integer subscriptionIdentifier, MqttProperties.UserProperties mqttUserProperties) {
+        subscribesFuture(mqttSubInfoList, subscriptionIdentifier, mqttUserProperties).syncUninterruptibly();
     }
 
 
@@ -229,9 +266,23 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
     }
 
     @Override
+    public void subscribe(MqttSubInfo mqttSubInfo) {
+        subscribe(mqttSubInfo, null, null);
+    }
+
+    @Override
+    public void subscribe(MqttSubInfo mqttSubInfo, Integer subscriptionIdentifier, MqttProperties.UserProperties mqttUserProperties) {
+        subscribeFuture(mqttSubInfo, subscriptionIdentifier, mqttUserProperties).syncUninterruptibly();
+    }
+
+    @Override
     public MqttFutureWrapper unsubscribesFuture(List<String> topicList) {
+        return this.unsubscribesFuture(topicList, null);
+    }
+
+    @Override
+    public MqttFutureWrapper unsubscribesFuture(List<String> topicList, MqttProperties.UserProperties mqttUserProperties) {
         AssertUtils.notEmpty(topicList, "topicList is empty");
-        //读锁，和发送，订阅消息不互斥，和连接相关的互斥
         LOCK.readLock().lock();
         try {
             Channel channel = currentChannel;
@@ -240,7 +291,7 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
             //在线检查，必须在线才能进行下一步
             onlineCheck(channel);
             //进行取消订阅操作
-            MqttFuture unsubscribeFuture = doUnsubscribeFuture(channel, topicList);
+            MqttFuture unsubscribeFuture = doUnsubscribeFuture(channel, topicList, mqttUserProperties);
             return new MqttFutureWrapper(unsubscribeFuture);
         } finally {
             LOCK.readLock().unlock();
@@ -248,12 +299,13 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
     }
 
     @Override
+    public void unsubscribes(List<String> topicList, MqttProperties.UserProperties mqttUserProperties) {
+        unsubscribesFuture(topicList, mqttUserProperties).syncUninterruptibly();
+    }
+
+    @Override
     public MqttFutureWrapper unsubscribeFuture(String topic) {
-        AssertUtils.notEmpty(topic, "topic is empty");
-        List<String> topicList = new ArrayList<>();
-        topicList.add(topic);
-        MqttFutureWrapper unsubscribeFutureWrapper = unsubscribesFuture(topicList);
-        return unsubscribeFutureWrapper;
+        return unsubscribeFuture(topic, null);
     }
 
 
@@ -263,8 +315,22 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
     }
 
     @Override
+    public void unsubscribe(String topic, MqttProperties.UserProperties mqttUserProperties) {
+        unsubscribeFuture(topic, mqttUserProperties).syncUninterruptibly();
+    }
+
+    @Override
     public void unsubscribe(String topic) {
         unsubscribeFuture(topic).syncUninterruptibly();
+    }
+
+    @Override
+    public MqttFutureWrapper unsubscribeFuture(String topic, MqttProperties.UserProperties mqttUserProperties) {
+        AssertUtils.notEmpty(topic, "topic is empty");
+        List<String> topicList = new ArrayList<>(1);
+        topicList.add(topic);
+        MqttFutureWrapper unsubscribeFutureWrapper = unsubscribesFuture(topicList, mqttUserProperties);
+        return unsubscribeFutureWrapper;
     }
 
 
@@ -317,19 +383,17 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
         }
     }
 
+
     /**
      * 调用MQTT的消息委托器进行发送
      *
-     * @param channel Channel
-     * @param payload 载荷
-     * @param topic   主题
-     * @param qos     服务质量
-     * @param retain  是否保留消息
+     * @param channel     Channel
+     * @param mqttMsgInfo MQTT消息信息
      * @return Future
      */
-    private MqttFuture doPublish(Channel channel, byte[] payload, String topic, MqttQoS qos, boolean retain) {
+    private MqttFuture doPublish(Channel channel, MqttMsgInfo mqttMsgInfo) {
         //创建发布消息
-        MqttMsg mqttMsg = createMsgAndMsgId(channel, true, qos, (msgId) -> new MqttMsg(msgId, payload, topic, qos, retain));
+        MqttMsg mqttMsg = createMsgAndMsgId(channel, true, mqttMsgInfo.getQos(), (msgId) -> new MqttMsg(msgId, mqttMsgInfo.getPayload(), mqttMsgInfo.getTopic(), mqttMsgInfo.getQos(), mqttMsgInfo.isRetain()));
         //对于qos为0的消息，创建一个Object作为Future的key，qos 1 和 2的 则用消息ID作为Key
         Object futureKey = (mqttMsg.getMsgId() == MqttConstant.INVALID_MSG_ID ? new Object() : mqttMsg.getMsgId());
         boolean isHighQos = isHighQos(mqttMsg.getQos());
@@ -340,6 +404,11 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
                 releaseMsgIdAndRemoveMsg(channel, msgFuture, mqttMsg.getMsgId(), true);
             }
         });
+        //高版本额外设置
+        if (mqttConnectParameter.getMqttVersion() == MqttVersion.MQTT_5_0_0) {
+            MqttProperties mqttProperties = MqttUtils.getPublishMqttProperties(mqttMsgInfo);
+            mqttMsg.setMqttProperties(mqttProperties);
+        }
         //真正发布消息
         mqttDelegateHandler.sendPublish(channel, mqttMsg, msgFuture);
         //如果是高qos，添加重试任务
@@ -351,7 +420,7 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
                 channelSupplier = this::getChannel;
             }
             MqttMsgRetryTask mqttMsgRetryTask = new MqttMsgRetryTask(channelSupplier, mqttMsg.getMsgId(), msgFuture);
-            mqttRetrier.retry(msgFuture, mqttMsgRetryTask, false);
+            mqttRetrier.retry(msgFuture, MqttConstant.MSG_RETRY_MILLS, mqttMsgRetryTask, false);
         }
         return msgFuture;
     }
@@ -360,12 +429,14 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
     /**
      * 进行MQTT的订阅
      *
-     * @param channel         Channel
-     * @param mqttSubInfoList 订阅的列表
+     * @param channel                Channel
+     * @param mqttSubInfoList        订阅的列表
+     * @param subscriptionIdentifier 订阅标识符
+     * @param mqttUserProperties     用户属性
      * @return Future
      */
-    private MqttFuture doSubscribeFuture(Channel channel, List<MqttSubInfo> mqttSubInfoList) {
-        MqttSubMsg mqttSubMsg = createMsgAndMsgId(channel, false, (msgId) -> new MqttSubMsg(msgId, mqttSubInfoList));
+    private MqttFuture doSubscribeFuture(Channel channel, List<MqttSubInfo> mqttSubInfoList, Integer subscriptionIdentifier, MqttProperties.UserProperties mqttUserProperties) {
+        MqttSubMsg mqttSubMsg = createMsgAndMsgId(channel, false, (msgId) -> new MqttSubMsg(msgId, mqttSubInfoList, subscriptionIdentifier, mqttUserProperties));
         MqttFuture subscribeFuture = new DefaultMqttFuture<>(clientId, mqttSubMsg.getMsgId(), mqttSubMsg);
         subscribeFuture.addListener(mqttFuture -> releaseMsgIdAndRemoveMsg(channel, subscribeFuture, mqttSubMsg.getMsgId(), false));
         mqttDelegateHandler.sendSubscribe(channel, mqttSubMsg);
@@ -375,13 +446,14 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
     /**
      * 进行MQTT的取消订阅
      *
-     * @param channel   Channel
-     * @param topicList 取消订阅主题列表
+     * @param channel            Channel
+     * @param topicList          取消订阅主题列表
+     * @param mqttUserProperties 用户属性
      * @return Future
      */
-    private MqttFuture doUnsubscribeFuture(Channel channel, List<String> topicList) {
+    private MqttFuture doUnsubscribeFuture(Channel channel, List<String> topicList, MqttProperties.UserProperties mqttUserProperties) {
         //创建一个取消订阅消息
-        MqttUnsubMsg mqttUnsubMsg = createMsgAndMsgId(channel, false, (msgId) -> new MqttUnsubMsg(msgId, topicList));
+        MqttUnsubMsg mqttUnsubMsg = createMsgAndMsgId(channel, false, (msgId) -> new MqttUnsubMsg(msgId, topicList, mqttUserProperties));
         //取消订阅Future
         MqttFuture unsubscribeFuture = new DefaultMqttFuture<>(clientId, mqttUnsubMsg.getMsgId(), mqttUnsubMsg);
         //添加一个兜底监听，对于取消订阅，不管成功与否，都需要释放消息ID
@@ -587,14 +659,14 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
                     for (MqttMsg mqttMsg : msgList) {
                         MqttMsgState msgState = mqttMsg.getMsgState();
                         MqttMsgDirection mqttMsgDirection = mqttMsg.getMqttMsgDirection();
-                        //只重试消息方向是发送，且PUBLISH和PUBREL的消息
+                        //只重试消息方向是发送的，且PUBLISH和PUBREL的消息
                         if (mqttMsgDirection == MqttMsgDirection.SEND) {
                             if (msgState == MqttMsgState.PUBLISH || msgState == MqttMsgState.PUBREL) {
                                 LogUtils.debug(DefaultMqttClient.class, "client: " + clientId + " add old retry msg: " + mqttMsg);
                                 int msgId = mqttMsg.getMsgId();
                                 MqttFuture msgFuture = new DefaultMqttFuture(clientId, msgId, mqttMsg);
                                 msgFuture.addListener(mqttFuture -> releaseMsgIdAndRemoveMsg(channel, mqttFuture, msgId, true));
-                                mqttRetrier.retry(msgFuture, new MqttMsgRetryTask(this::getChannel, msgId, msgFuture), true);
+                                mqttRetrier.retry(msgFuture, MqttConstant.MSG_RETRY_MILLS, new MqttMsgRetryTask(this::getChannel, msgId, msgFuture), true);
                             }
                         }
                     }
@@ -614,7 +686,7 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
         try {
             if (!isClose() && !manualDisconnect) {
                 EventLoopGroup eventLoopGroup = mqttConfiguration.getEventLoopGroup();
-                long reconnectInterval = mqttConnectParameter.getKeepAliveTimeSeconds() + 1;
+                long reconnectInterval = MqttUtils.getKeepAliveTimeSeconds(getChannel(), mqttConnectParameter.getKeepAliveTimeSeconds()) + 1;
                 reconnectScheduledFuture = eventLoopGroup.scheduleWithFixedDelay(() -> {
                     Channel channel = getChannel();
                     if (isOpen(channel) || isClose()) {
@@ -687,6 +759,17 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
         }
         return false;
     }
+
+    @Override
+    public boolean isOnline() {
+        return isOnline(currentChannel);
+    }
+
+    @Override
+    public boolean isActive() {
+        return (currentChannel != null && currentChannel.isActive());
+    }
+
 
     /**
      * 是否连接中（ESTABLISHED）
@@ -762,6 +845,7 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
             mqttCallback.channelConnectCallback(mqttConnectCallbackResult);
         }
     }
+
 
     @Override
     public void connectLostCallback(MqttConnectLostCallbackResult mqttConnectLostCallbackResult) {

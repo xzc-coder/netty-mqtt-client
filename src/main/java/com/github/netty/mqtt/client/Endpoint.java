@@ -12,12 +12,14 @@ public interface Endpoint {
 
     /**
      * 获取本机的地址，Channel是open时才有值
+     *
      * @return InetSocketAddress
      */
     InetSocketAddress getLocalAddress();
 
     /**
      * 获取服务器的地址，Channel是open时才有值
+     *
      * @return InetSocketAddress
      */
     InetSocketAddress getRemoteAddress();

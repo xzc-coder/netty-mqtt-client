@@ -156,8 +156,8 @@ public class MqttConfiguration {
     public synchronized void close() {
         LogUtils.info(MqttConfiguration.class,"MqttConfiguration close");
         eventLoopGroup.shutdownGracefully().syncUninterruptibly();
-        mqttMsgStore.close();
         LogUtils.info(MqttConfiguration.class,"MqttMsgStore close");
+        mqttMsgStore.close();
     }
 
     public ObjectCreator<MqttClient> getMqttClientObjectCreator() {

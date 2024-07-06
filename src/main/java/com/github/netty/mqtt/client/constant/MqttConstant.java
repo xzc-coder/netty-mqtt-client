@@ -30,6 +30,13 @@ public class MqttConstant {
 
     public static final String MQTT_CLIENT_ID_KEY = "NETTY_MQTT_MQTT_CLIENT_ID_KEY";
 
+    public static final String KEEP_ALIVE_TIME_KEY = "NETTY_KEEP_ALIVE_TIME_KEY";
+
+    public static final String TOPIC_ALIAS_MAP_KEY = "NETTY_TOPIC_ALIAS_MAP_KEY";
+
+    public static final String DISCONNECT_REASON_CODE_KEY = "NETTY_DISCONNECT_REASON_CODE_KEY";
+
+
     /**
      * Channel中的MQTT认证值
      */
@@ -46,6 +53,21 @@ public class MqttConstant {
      * Channel中的MQTT的客户端ID
      */
     public static final AttributeKey<String> MQTT_CLIENT_ID_ATTRIBUTE_KEY = AttributeKey.newInstance(MqttConstant.MQTT_CLIENT_ID_KEY);
+    /**
+     * Channel中的MQTT活跃间隔，MQTT 5中是需要使用Broker返回的值
+     */
+    public static final AttributeKey<Integer> KEEP_ALIVE_TIME_ATTRIBUTE_KEY = AttributeKey.newInstance(MqttConstant.KEEP_ALIVE_TIME_KEY);
+
+    /**
+     * Channel中的MQTT主题别名映射Map，MQTT 5中使用
+     */
+    public static final AttributeKey<Map<String,Integer>> TOPIC_ALIAS_MAP_ATTRIBUTE_KEY = AttributeKey.newInstance(MqttConstant.TOPIC_ALIAS_MAP_KEY);
+
+    /**
+     * Channel中断开连接的reasonCode，如果是正常断开reasonCode则为0X00
+     */
+    public static final AttributeKey<Byte> DISCONNECT_REASON_CODE_ATTRIBUTE_KEY = AttributeKey.newInstance(DISCONNECT_REASON_CODE_KEY);
+
     /**
      * 最大端口号 65535,2个字节
      */
@@ -101,7 +123,7 @@ public class MqttConstant {
     /**
      * 重试毫秒间隔
      */
-    public static final long DEFAULT_RETRY_INTERVAL_MILLIS = 1000;
+    public static final long DEFAULT_RETRY_INTERVAL_MILLIS = 1000L;
 
     /**
      * 默认的消息重试递增值
@@ -141,6 +163,29 @@ public class MqttConstant {
      */
     public static final int DEFAULT_PORT = 1883;
 
+    /**
+     * 请求问题标识符
+     */
+    public static final int DEFAULT_REQUEST_PROBLEM_INFORMATION = 1;
+
+    /**
+     * 请求响应标识符
+     */
+    public static final int DEFAULT_REQUEST_RESPONSE_INFORMATION = 0;
+
+    /**
+     * 消息重试间隔，初始2000毫秒，每次失败+1000
+     */
+    public static final long MSG_RETRY_MILLS = 2000;
+    /**
+     * 默认的消息重试递增值
+     */
+    public static final long MSG_RETRY_INCREASE_MILLS = 1000;
+
+    /**
+     * 默认的消息重试最大时间
+     */
+    public static final long MSG_RETRY_MAX_MILLS = 15000;
 
     /**
      * 无效的消息ID值，用于qos 0的消息占位
@@ -151,24 +196,45 @@ public class MqttConstant {
      * Netty中的线程池名
      */
     public static final String THREAD_FACTORY_POOL_NAME = "netty-mqtt-client-eventLoop";
+
     /**
-     * Netty中添加的的SSL处理器名
+     * 空字符串
      */
+    public static final String EMPTY_STR = "";
+
+
     public static final String NETTY_SSL_HANDLER_NAME = "sslHandler";
-    /**
-     * Netty中添加的的空闲检测处理器名
-     */
+
     public static final String NETTY_IDLE_HANDLER_NAME = "idleStateHandler";
-    /**
-     * Netty中添加的的MQTT协议解码器名
-     */
+
     public static final String NETTY_DECODER_HANDLER_NAME = "mqttDecoder";
-    /**
-     * Netty中添加的的MQTT协议编码器名
-     */
+
     public static final String NETTY_ENCODER_HANDLER_NAME = "mqttEncoder";
-    /**
-     * Netty中添加的的MQTT处理器名
-     */
+
     public static final String NETTY_CHANNEL_HANDLER_NAME = "mqttChannelHandler";
+
+
+    /**
+     * 认证原因码：继续认证
+     */
+    public static final byte AUTH_CONTINUE_REASON_CODE = 0x18;
+    /**
+     * 认证原因码：重新认证
+     */
+    public static final byte AUTH_RE_AUTH_REASON_CODE = 0x19;
+
+    /**
+     * 取消订阅成功码
+     */
+    public static final short UNSUBSCRIPTION_SUCCESS_REASON_CODE = 0x00;
+
+    /**
+     * 消息成功码
+     */
+    public static final byte MESSAGE_SUCCESS_REASON_CODE = 0x00;
+
+    /**
+     * 正常断开连接成功码
+     */
+    public static final byte DISCONNECT_SUCCESS_REASON_CODE = 0x00;
 }

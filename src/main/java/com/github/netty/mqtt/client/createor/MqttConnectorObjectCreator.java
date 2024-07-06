@@ -16,6 +16,9 @@ public class MqttConnectorObjectCreator implements ObjectCreator<MqttConnector> 
 
     @Override
     public MqttConnector createObject(Object... constructorArgs) {
-        return new DefaultMqttConnector((MqttConfiguration) constructorArgs[0], (MqttConnectParameter) constructorArgs[1], (MqttCallback) constructorArgs[2]);
+        MqttConfiguration mqttConfiguration = (MqttConfiguration) constructorArgs[0];
+        MqttConnectParameter mqttConnectParameter = (MqttConnectParameter) constructorArgs[1];
+        MqttCallback mqttCallback = (MqttCallback) constructorArgs[2];
+        return new DefaultMqttConnector(mqttConfiguration,mqttConnectParameter,mqttCallback);
     }
 }

@@ -27,7 +27,7 @@ public class MqttMsgIdCache {
 
     /**
      * 占用客户端的消息ID，需要在MQTT的客户端创建时占用（其他时候占用会产生不可预知问题），如果是不清理会话，则调用该方法让其占用一些未释放的消息ID，
-     * 该方法是非线程安全的
+     * 该方法是非线程安全的，在消息存储器初始化时单线程占用即可
      *
      * @param clientId     客户端ID
      * @param msgIdCollect 消息ID集合

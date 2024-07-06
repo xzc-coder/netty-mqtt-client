@@ -6,10 +6,7 @@ import com.github.netty.mqtt.client.MqttConnectParameter;
 import com.github.netty.mqtt.client.callback.MqttCallback;
 import com.github.netty.mqtt.client.connector.MqttConnector;
 import com.github.netty.mqtt.client.handler.MqttDelegateHandler;
-import com.github.netty.mqtt.client.msg.MqttMsg;
-import com.github.netty.mqtt.client.msg.MqttSubInfo;
-import com.github.netty.mqtt.client.msg.MqttSubMsg;
-import com.github.netty.mqtt.client.msg.MqttUnsubMsg;
+import com.github.netty.mqtt.client.msg.*;
 import com.github.netty.mqtt.client.support.future.MqttFuture;
 import com.github.netty.mqtt.client.support.future.MqttFutureWrapper;
 import io.netty.channel.Channel;
@@ -92,6 +89,21 @@ public abstract class CglibTargetHelper {
         }
 
         @Override
+        public MqttFutureWrapper disconnectFuture(MqttDisconnectMsg mqttDisconnectMsg) {
+            return null;
+        }
+
+        @Override
+        public void disconnect(MqttDisconnectMsg mqttDisconnectMsg) {
+
+        }
+
+        @Override
+        public MqttFutureWrapper publishFuture(MqttMsgInfo mqttMsgInfo) {
+            return null;
+        }
+
+        @Override
         public MqttFutureWrapper publishFuture(byte[] payload, String topic, MqttQoS qos, boolean retain) {
             return null;
         }
@@ -104,6 +116,11 @@ public abstract class CglibTargetHelper {
         @Override
         public MqttFutureWrapper publishFuture(byte[] payload, String topic) {
             return null;
+        }
+
+        @Override
+        public void publish(MqttMsgInfo mqttMsgInfo) {
+
         }
 
         @Override
@@ -127,7 +144,22 @@ public abstract class CglibTargetHelper {
         }
 
         @Override
+        public void subscribe(MqttSubInfo mqttSubInfo) {
+
+        }
+
+        @Override
+        public void subscribe(MqttSubInfo mqttSubInfo, Integer subscriptionIdentifier, MqttProperties.UserProperties mqttUserProperties) {
+
+        }
+
+        @Override
         public void subscribes(List<MqttSubInfo> mqttSubInfoList) {
+
+        }
+
+        @Override
+        public void subscribes(List<MqttSubInfo> mqttSubInfoList, Integer subscriptionIdentifier, MqttProperties.UserProperties mqttUserProperties) {
 
         }
 
@@ -147,8 +179,28 @@ public abstract class CglibTargetHelper {
         }
 
         @Override
+        public MqttFutureWrapper subscribeFuture(MqttSubInfo mqttSubInfo) {
+            return null;
+        }
+
+        @Override
+        public MqttFutureWrapper subscribeFuture(MqttSubInfo mqttSubInfo, Integer subscriptionIdentifier, MqttProperties.UserProperties mqttUserProperties) {
+            return null;
+        }
+
+        @Override
+        public MqttFutureWrapper subscribesFuture(List<MqttSubInfo> mqttSubInfoList, Integer subscriptionIdentifier, MqttProperties.UserProperties mqttUserProperties) {
+            return null;
+        }
+
+        @Override
         public MqttFutureWrapper subscribesFuture(List<MqttSubInfo> mqttSubInfoList) {
             return null;
+        }
+
+        @Override
+        public void unsubscribes(List<String> topicList, MqttProperties.UserProperties mqttUserProperties) {
+
         }
 
         @Override
@@ -157,8 +209,18 @@ public abstract class CglibTargetHelper {
         }
 
         @Override
+        public void unsubscribe(String topic, MqttProperties.UserProperties mqttUserProperties) {
+
+        }
+
+        @Override
         public void unsubscribe(String topic) {
 
+        }
+
+        @Override
+        public MqttFutureWrapper unsubscribeFuture(String topic, MqttProperties.UserProperties mqttUserProperties) {
+            return null;
         }
 
         @Override
@@ -172,6 +234,11 @@ public abstract class CglibTargetHelper {
         }
 
         @Override
+        public MqttFutureWrapper unsubscribesFuture(List<String> topicList, MqttProperties.UserProperties mqttUserProperties) {
+            return null;
+        }
+
+        @Override
         public void addMqttCallback(MqttCallback mqttCallback) {
 
         }
@@ -179,6 +246,16 @@ public abstract class CglibTargetHelper {
         @Override
         public void addMqttCallbacks(Collection<MqttCallback> mqttCallbacks) {
 
+        }
+
+        @Override
+        public boolean isOnline() {
+            return false;
+        }
+
+        @Override
+        public boolean isActive() {
+            return false;
         }
 
         @Override
@@ -213,6 +290,7 @@ public abstract class CglibTargetHelper {
 
     public static class CglibTargetMqttDelegateHandler implements MqttDelegateHandler {
 
+
         @Override
         public void channelConnect(Channel channel) {
 
@@ -229,12 +307,22 @@ public abstract class CglibTargetHelper {
         }
 
         @Override
-        public void sendDisconnect(Channel channel, MqttFuture mqttFuture) {
+        public void auth(Channel channel, MqttMessage mqttAuthMessage) {
 
         }
 
         @Override
-        public void disconnect(Channel channel) {
+        public void sendAuth(Channel channel, byte reasonCode, MqttProperties mqttProperties) {
+
+        }
+
+        @Override
+        public void sendDisconnect(Channel channel, MqttFuture mqttFuture, MqttDisconnectMsg mqttDisconnectMsg) {
+
+        }
+
+        @Override
+        public void disconnect(Channel channel, MqttMessage mqttMessage) {
 
         }
 

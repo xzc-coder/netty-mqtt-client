@@ -58,14 +58,14 @@ public interface MqttMsgStore {
      */
     void clearMsg(MqttMsgDirection mqttMsgDirection, String clientId);
 
-
     /**
      * 清理客户端的MQTT消息
+     *
      * @param clientId 客户端ID
      */
     default void clearMsg(String clientId) {
-        clearMsg(MqttMsgDirection.SEND,clientId);
-        clearMsg(MqttMsgDirection.RECEIVE,clientId);
+        clearMsg(MqttMsgDirection.SEND, clientId);
+        clearMsg(MqttMsgDirection.RECEIVE, clientId);
     }
 
     /**
@@ -74,6 +74,4 @@ public interface MqttMsgStore {
     default void close() {
 
     }
-
-
 }

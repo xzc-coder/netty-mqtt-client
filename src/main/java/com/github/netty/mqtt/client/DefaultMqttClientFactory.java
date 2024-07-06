@@ -108,9 +108,9 @@ public class DefaultMqttClientFactory implements MqttClientFactory {
     @Override
     public synchronized void close() {
         try {
-            LogUtils.info(DefaultMqttClientFactory.class,"MqttClientFactory close");
+            LogUtils.info(DefaultMqttClientFactory.class, "MqttClientFactory close");
             closeClient();
-        }finally {
+        } finally {
             this.mqttConfiguration.close();
         }
     }
@@ -120,13 +120,13 @@ public class DefaultMqttClientFactory implements MqttClientFactory {
      */
     private void closeClient() {
         Set<String> clientIdSet = MQTT_CLIENT_MAP.keySet();
-        for(String clientId : clientIdSet) {
+        for (String clientId : clientIdSet) {
             MqttClient mqttClient = MQTT_CLIENT_MAP.get(clientId);
-            if(mqttClient != null && !mqttClient.isClose()) {
+            if (mqttClient != null && !mqttClient.isClose()) {
                 try {
                     mqttClient.close();
-                }catch (Exception e) {
-                    LogUtils.warn(DefaultMqttClientFactory.class,"client:" + clientId + "close failed,cause : " + e.getMessage());
+                } catch (Exception e) {
+                    LogUtils.warn(DefaultMqttClientFactory.class, "client:" + clientId + "close failed,cause : " + e.getMessage());
                 }
             }
         }

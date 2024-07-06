@@ -4,6 +4,7 @@ import com.github.netty.mqtt.client.MqttConfiguration;
 import com.github.netty.mqtt.client.MqttConnectParameter;
 import com.github.netty.mqtt.client.callback.MqttCallback;
 import com.github.netty.mqtt.client.constant.MqttAuthState;
+import com.github.netty.mqtt.client.constant.MqttVersion;
 import com.github.netty.mqtt.client.exception.MqttException;
 import com.github.netty.mqtt.client.handler.channel.MqttChannelHandler;
 import com.github.netty.mqtt.client.constant.MqttConstant;
@@ -50,7 +51,9 @@ public class DefaultMqttConnector extends AbstractMqttConnector {
         bootstrap.attr(MqttConstant.SEND_MSG_MAP_ATTRIBUTE_KEY, new ConcurrentHashMap(16));
         bootstrap.attr(MqttConstant.RECEIVE_MSG_MAP_ATTRIBUTE_KEY, new ConcurrentHashMap(16));
         bootstrap.attr(MqttConstant.MQTT_CLIENT_ID_ATTRIBUTE_KEY, mqttConnectParameter.getClientId());
-
+        if(mqttConnectParameter.getMqttVersion() == MqttVersion.MQTT_5_0_0) {
+            bootstrap.attr(MqttConstant.TOPIC_ALIAS_MAP_ATTRIBUTE_KEY,new ConcurrentHashMap<>());
+        }
         bootstrap.group(configuration.getEventLoopGroup()).channel(NioSocketChannel.class).handler(new ChannelInitializer<NioSocketChannel>() {
             @Override
             protected void initChannel(NioSocketChannel ch) throws SSLException {

@@ -17,6 +17,7 @@ public class MqttSubscribeCallbackInfo {
      * 该条主题是否订阅成功
      */
     private boolean isSubscribed;
+
     /**
      * 订阅时的qos
      */
@@ -57,6 +58,7 @@ public class MqttSubscribeCallbackInfo {
     public void setSubscribeTopic(String subscribeTopic) {
         this.subscribeTopic = subscribeTopic;
     }
+
 
     @Override
     public String toString() {

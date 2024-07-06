@@ -4,6 +4,7 @@ import com.github.netty.mqtt.client.MqttConfiguration;
 import com.github.netty.mqtt.client.MqttConnectParameter;
 import com.github.netty.mqtt.client.constant.MqttConstant;
 import com.github.netty.mqtt.client.handler.MqttDelegateHandler;
+import com.github.netty.mqtt.client.support.util.AssertUtils;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.*;
@@ -31,6 +32,8 @@ public abstract class AbstractMqttConnector implements MqttConnector {
     protected final MqttDelegateHandler mqttDelegateHandler;
 
     public AbstractMqttConnector(MqttConfiguration configuration, MqttConnectParameter mqttConnectParameter, Object... handlerCreateArgs) {
+        AssertUtils.notNull(configuration, "configuration is null");
+        AssertUtils.notNull(mqttConnectParameter, "mqttConnectParameter is null");
         this.configuration = configuration;
         this.mqttConnectParameter = mqttConnectParameter;
         this.mqttDelegateHandler = createDelegateHandle(handlerCreateArgs);
@@ -44,6 +47,12 @@ public abstract class AbstractMqttConnector implements MqttConnector {
      */
     protected abstract MqttDelegateHandler createDelegateHandle(Object... handlerCreateArgs);
 
+    /**
+     * 添加Netty的TCP参数
+     *
+     * @param bootstrap 启动器
+     * @param optionMap 参数Map
+     */
     protected void addOptions(Bootstrap bootstrap, Map<ChannelOption, Object> optionMap) {
         Iterator<Map.Entry<ChannelOption, Object>> optionIterator = optionMap.entrySet().iterator();
         while (optionIterator.hasNext()) {
@@ -65,6 +74,7 @@ public abstract class AbstractMqttConnector implements MqttConnector {
 
     /**
      * SSL处理
+     *
      * @param allocator 内存分配器
      * @return Ssl处理器
      * @throws SSLException
@@ -75,14 +85,14 @@ public abstract class AbstractMqttConnector implements MqttConnector {
         File clientPrivateKeyFile = mqttConnectParameter.getClientPrivateKeyFile();
         File rootCertificateFile = mqttConnectParameter.getRootCertificateFile();
         //客户端私钥和客户端证书都不为null才是双向认证
-        if(clientCertificateFile != null && clientPrivateKeyFile != null) {
+        if (clientCertificateFile != null && clientPrivateKeyFile != null) {
             singleSsl = false;
         }
         SslContext sslCtx;
         if (singleSsl) {
             //单向认证
             sslCtx = SslContextBuilder.forClient().trustManager(rootCertificateFile).build();
-        }else {
+        } else {
             //双向认证
             sslCtx = SslContextBuilder.forClient().keyManager(clientCertificateFile, clientPrivateKeyFile).trustManager(rootCertificateFile).build();
         }

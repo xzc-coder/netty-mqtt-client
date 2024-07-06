@@ -8,6 +8,7 @@ import com.github.netty.mqtt.client.handler.DefaultMqttDelegateHandler;
 import com.github.netty.mqtt.client.handler.MqttDelegateHandler;
 import com.github.netty.mqtt.client.support.util.AssertUtils;
 import com.github.netty.mqtt.client.support.util.LogUtils;
+import com.github.netty.mqtt.client.support.util.MqttUtils;
 import io.netty.channel.*;
 import io.netty.handler.codec.DecoderResult;
 import io.netty.handler.codec.mqtt.*;
@@ -25,7 +26,7 @@ import java.util.concurrent.TimeUnit;
  * @author: xzc-coder
  */
 @ChannelHandler.Sharable
-public class MqttChannelHandler extends SimpleChannelInboundHandler<MqttMessage> implements ChannelOutboundHandler {
+public final class MqttChannelHandler extends SimpleChannelInboundHandler<MqttMessage> implements ChannelOutboundHandler {
 
     /**
      * MQTT消息委托器
@@ -65,11 +66,18 @@ public class MqttChannelHandler extends SimpleChannelInboundHandler<MqttMessage>
                 case CONNACK:
                     //连接确认
                     MqttConnAckMessage mqttConnAckMessage = (MqttConnAckMessage) mqttMessage;
-                    //连接成功则继续处理
+                    //成功则启动心跳定时任务
                     if (MqttConnectReturnCode.CONNECTION_ACCEPTED.equals(mqttConnAckMessage.variableHeader().connectReturnCode())) {
+                        //连接成功处理
                         connectSuccessHandle(channel,mqttConnAckMessage);
                     }
                     mqttDelegateHandler.connack(channel, mqttConnAckMessage);
+                    break;
+                case DISCONNECT:
+                    mqttDelegateHandler.disconnect(channel, mqttMessage);
+                    break;
+                case AUTH:
+                    mqttDelegateHandler.auth(channel,mqttMessage);
                     break;
                 case SUBACK:
                     mqttDelegateHandler.suback(channel, (MqttSubAckMessage) mqttMessage);
@@ -104,12 +112,13 @@ public class MqttChannelHandler extends SimpleChannelInboundHandler<MqttMessage>
     }
 
 
+
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         Channel channel = ctx.channel();
         String clientId = channel.attr(MqttConstant.MQTT_CLIENT_ID_ATTRIBUTE_KEY).get();
         LogUtils.info(MqttChannelHandler.class, "client:" + clientId + " tcp disconnected,local:" + channel.localAddress() + ",remote:" + channel.remoteAddress());
-        mqttDelegateHandler.disconnect(ctx.channel());
+        mqttDelegateHandler.disconnect(ctx.channel(),null);
     }
 
     @Override
@@ -182,14 +191,11 @@ public class MqttChannelHandler extends SimpleChannelInboundHandler<MqttMessage>
         ctx.flush();
     }
 
-    /**
-     * MQTT连接成功处理
-     * @param channel channel
-     * @param mqttConnAckMessage MQTT连接确认消息
-     */
+
     private void connectSuccessHandle(Channel channel, MqttConnAckMessage mqttConnAckMessage) {
         //获取并设置心跳间隔
-        Integer keepAliveTimeSeconds = mqttConnectParameter.getKeepAliveTimeSeconds();
+        Integer keepAliveTimeSeconds = MqttUtils.getIntegerMqttPropertyValue(mqttConnAckMessage.variableHeader().properties(), MqttProperties.MqttPropertyType.SERVER_KEEP_ALIVE, mqttConnectParameter.getKeepAliveTimeSeconds());
+        channel.attr(MqttConstant.KEEP_ALIVE_TIME_ATTRIBUTE_KEY).set(keepAliveTimeSeconds);
         //1000要加L 不然会溢出
         long keepAliveTimeMills = keepAliveTimeSeconds * 1000L;
         //定时任务间隔

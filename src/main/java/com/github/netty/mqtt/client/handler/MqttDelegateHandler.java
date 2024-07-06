@@ -1,6 +1,7 @@
 package com.github.netty.mqtt.client.handler;
 
 
+import com.github.netty.mqtt.client.msg.MqttDisconnectMsg;
 import com.github.netty.mqtt.client.msg.MqttMsg;
 import com.github.netty.mqtt.client.msg.MqttSubMsg;
 import com.github.netty.mqtt.client.msg.MqttUnsubMsg;
@@ -41,20 +42,38 @@ public interface MqttDelegateHandler {
     void connack(Channel channel, MqttConnAckMessage mqttConnAckMessage);
 
     /**
-     * 发送一个MQTT 断开连接
+     * 收到一个MQTT auth
+     *
+     * @param channel         Channel
+     * @param mqttAuthMessage MQTT认证消息
+     */
+    void auth(Channel channel, MqttMessage mqttAuthMessage);
+
+    /**
+     * 发送一个MQTT认证
      *
      * @param channel Channel
-     * @param mqttFuture Future
+     */
+    void sendAuth(Channel channel, byte reasonCode, MqttProperties mqttProperties);
+
+
+    /**
+     * 发送一个MQTT 断开连接
+     *
+     * @param channel           Channel
+     * @param mqttFuture        Future
+     * @param mqttDisconnectMsg 断开消息
      * @return Future
      */
-    void sendDisconnect(Channel channel,MqttFuture mqttFuture);
+    void sendDisconnect(Channel channel, MqttFuture mqttFuture, MqttDisconnectMsg mqttDisconnectMsg);
 
     /**
      * 接收到一个TCP断开连接
      *
-     * @param channel Channel
+     * @param channel     Channel
+     * @param mqttMessage MQTT消息
      */
-    void disconnect(Channel channel);
+    void disconnect(Channel channel, MqttMessage mqttMessage);
 
     /**
      * 发送一个MQTT订阅

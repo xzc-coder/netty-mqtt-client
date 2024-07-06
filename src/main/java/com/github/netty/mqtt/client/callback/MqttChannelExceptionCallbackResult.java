@@ -25,10 +25,18 @@ public class MqttChannelExceptionCallbackResult extends MqttCallbackResult {
     }
 
 
+    /**
+     * 获取认证状态
+     * @return 用于判断当前MQTT的连接状态
+     */
     public MqttAuthState getAuthState() {
         return authState;
     }
 
+    /**
+     * 获取异常原因
+     * @return 异常原因
+     */
     public Throwable getCause() {
         return cause;
     }
