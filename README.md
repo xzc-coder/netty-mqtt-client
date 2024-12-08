@@ -31,7 +31,7 @@ Java + Netty + MQTT
 
 9.支持遗嘱消息
 
-10.支持QOS等级为：0、1、2
+10.支持QoS等级为：0、1、2
 
 11.支持MQTT 3.1.1版本和MQTT 5版本相互切换，并且相互兼容
 
@@ -65,7 +65,7 @@ Java + Netty + MQTT
 
 #### MqttRetrier
 
-​	MQTT重试器，用于重试QOS1及QOS2中失败或未完成的消息，可通过连接配置修改重试时间及间隔
+​	MQTT重试器，用于重试QoS1及QoS2中失败或未完成的消息，可通过连接配置修改重试时间及间隔
 
 #### MqttDelegateHandler
 
@@ -319,7 +319,7 @@ mqttFutureWrapper.addListener(mqttFuture -> {
   * 发送一个订阅消息，会阻塞至发送完成
   *
   * @param topic 订阅的主题
-  * @param qos   订阅的qos
+  * @param qos   订阅的QoS
   */
  void subscribe(String topic, MqttQoS qos);
 
@@ -359,7 +359,7 @@ mqttFutureWrapper.addListener(mqttFuture -> {
   * 发送一个订阅消息，会阻塞至发送完成
   *
   * @param topicList 订阅主题集合
-  * @param qos       订阅的qos
+  * @param qos       订阅的QoS
   */
  void subscribes(List<String> topicList, MqttQoS qos);
 
@@ -367,7 +367,7 @@ mqttFutureWrapper.addListener(mqttFuture -> {
   * 发送一个订阅消息，不会阻塞
   *
   * @param topicList 订阅主题集合
-  * @param qos       订阅的qos
+  * @param qos       订阅的QoS
   * @return MqttFutureWrapper
   */
  MqttFutureWrapper subscribesFuture(List<String> topicList, MqttQoS qos);
@@ -376,7 +376,7 @@ mqttFutureWrapper.addListener(mqttFuture -> {
   * 发送一个订阅消息，不会阻塞
   *
   * @param topic 订阅的主题
-  * @param qos   订阅的qos
+  * @param qos   订阅的QoS
   * @return MqttFutureWrapper
   */
  MqttFutureWrapper subscribeFuture(String topic, MqttQoS qos);
@@ -722,7 +722,7 @@ MqttFutureWrapper publishFuture(byte[] payload, String topic, MqttQoS qos, boole
 MqttFutureWrapper publishFuture(byte[] payload, String topic, MqttQoS qos);
 
 /**
- * 发送一个消息，不会阻塞，retain 为 false，qos 为 0
+ * 发送一个消息，不会阻塞，retain 为 false，QoS 为 0
  *
  * @param payload 载荷
  * @param topic   主题
@@ -954,7 +954,7 @@ mqttConfiguration.addInterceptor(new LogInterceptor());
 mqttClientFactory.setMqttMsgStore(new MemoryMqttMsgStore());
 ```
 
-使用该方式，未完成的QOS1、QOS2的消息在JVM重启后会消失
+使用该方式，未完成的QoS1、QoS2的消息在JVM重启后会消失
 
 #### Redis消息存储器
 
@@ -976,7 +976,7 @@ RedisMqttMsgStore redisMqttMsgStore = new RedisMqttMsgStore(jedisPool);
 mqttClientFactory.setMqttMsgStore(redisMqttMsgStore);
 ```
 
-使用该方式，未完成的QOS1、QOS2的消息会存储（仅限classSession为false生效）
+使用该方式，未完成的QoS1、QoS2的消息会存储（仅限classSession为false生效）
 
 #### 文件消息存储器
 
@@ -989,7 +989,7 @@ FileMqttMsgStore fileMqttMsgStore = new FileMqttMsgStore(mqttMsgFile);
 mqttClientFactory.setMqttMsgStore(fileMqttMsgStore);
 ```
 
-使用该方式，必须传递一个properties的文件；该方式下未完成的QOS1、QOS2的消息会存储（仅限classSession为false生效）
+使用该方式，必须传递一个properties的文件；该方式下未完成的QoS1、QoS2的消息会存储（仅限classSession为false生效）
 
 ### 2.11 代理工厂
 
