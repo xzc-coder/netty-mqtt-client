@@ -614,7 +614,7 @@ public class DefaultMqttDelegateHandler implements MqttDelegateHandler {
     /**
      * 获取QOS2的发送消息（因为qos2的消息需要存储）
      *
-     * @param channel channel
+     * @param channel 通道
      * @param msgId   消息ID
      * @return MqttMsg
      */
@@ -710,7 +710,7 @@ public class DefaultMqttDelegateHandler implements MqttDelegateHandler {
     /**
      * 主题别名处理，返回新的主题
      *
-     * @param channel channel
+     * @param channel 通道
      * @param mqttMsg MQTT消息
      * @return 主题名
      */

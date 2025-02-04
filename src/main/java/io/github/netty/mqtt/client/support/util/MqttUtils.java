@@ -18,6 +18,7 @@ import io.netty.channel.Channel;
 import io.netty.handler.codec.mqtt.MqttProperties;
 import io.netty.handler.codec.mqtt.MqttQoS;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -713,6 +714,158 @@ public class MqttUtils {
             }
         }
         return mqttProperties;
+    }
+
+    /**
+     * 主题校验（参考 org.eclipse.paho.mqttv5.common.util.MqttTopicValidator#validate）
+     *
+     * @param topic 主题
+     * @param wildcardAllowed 是否允许包含通配符
+     */
+    public static void topicCheck(String topic,boolean wildcardAllowed) {
+        AssertUtils.notNull(topic,"topic is null");
+        int topicLen = 0;
+        try {
+            topicLen = topic.getBytes(MqttConstant.MQTT_DEFAULT_CHARACTER).length;
+        } catch (UnsupportedEncodingException e) {
+            throw new MqttException(e);
+        }
+        //校验主题长度
+        if (topicLen < MqttConstant.MQTT_MIN_TOPIC_LEN || topicLen > MqttConstant.MQTT_MAX_TOPIC_LEN) {
+            throw new MqttException(String.format("invalid topic length, should be in range[%d, %d]!",
+                    MqttConstant.MQTT_MIN_TOPIC_LEN, MqttConstant.MQTT_MAX_TOPIC_LEN));
+        }
+
+        //如果允许包含通配符
+        if (wildcardAllowed) {
+            //如果主题只存在 # 或者 + 通配符时，则不需要继续校验
+            if (equalsAny(topic, new String[] { MqttConstant.MQTT_MULTI_LEVEL_WILDCARD, MqttConstant.MQTT_SINGLE_LEVEL_WILDCARD })) {
+                return;
+            }
+            //多级通配符校验：不允许包含多个#;不允许包含有#的同时不以/# 结尾
+            if (countMatches(topic, MqttConstant.MQTT_MULTI_LEVEL_WILDCARD) > 1
+                    || (topic.contains(MqttConstant.MQTT_MULTI_LEVEL_WILDCARD)
+                    && !topic.endsWith(MqttConstant.MQTT_TOPIC_LEVEL_SEPARATOR + MqttConstant.MQTT_MULTI_LEVEL_WILDCARD))) {
+                throw new MqttException(
+                        "invalid usage of multi-level wildcard in topic string: " + topic);
+            }
+
+            //单级通配符校验
+            validateSingleLevelWildcard(topic);
+        }else {
+            //不允许包含通配符
+            if (containsAny(topic, (MqttConstant.MQTT_MULTI_LEVEL_WILDCARD + MqttConstant.MQTT_SINGLE_LEVEL_WILDCARD).toCharArray())) {
+                throw new MqttException("the topic name MUST NOT contain any wildcard characters (#+)");
+            }
+        }
+    }
+
+
+    /**
+     * 校验单级通配符主题
+     *
+     * @param topic 主题
+     */
+    private static void validateSingleLevelWildcard(String topic) {
+        char singleLevelWildcardChar = MqttConstant.MQTT_SINGLE_LEVEL_WILDCARD.charAt(0);
+        char topicLevelSeparatorChar = MqttConstant.MQTT_TOPIC_LEVEL_SEPARATOR.charAt(0);
+
+        char[] chars = topic.toCharArray();
+        int length = chars.length;
+        char prev = MqttConstant.NUL, next = MqttConstant.NUL;
+        for (int i = 0; i < length; i++) {
+            prev = (i - 1 >= 0) ? chars[i - 1] : MqttConstant.NUL;
+            next = (i + 1 < length) ? chars[i + 1] : MqttConstant.NUL;
+            if (chars[i] == singleLevelWildcardChar) {
+                //单级通配符的上一个和下一个字符只能是 /或者空字符
+                if (prev != topicLevelSeparatorChar && prev != MqttConstant.NUL || next != topicLevelSeparatorChar && next != MqttConstant.NUL) {
+                    throw new MqttException(
+                            String.format("invalid usage of single-level wildcard in topic string '%s'!",
+                                    topic));
+
+                }
+            }
+        }
+    }
+
+    /**
+     * 判断字符是否等于字符数组中的任意一个字符
+     *
+     * @param cs 字符
+     * @param strs 匹配的字符数组
+     * @return true：等于 false：不等于
+     */
+    private static boolean equalsAny(CharSequence cs, CharSequence[] strs) {
+        boolean eq = false;
+        if (cs == null) {
+            eq = (strs == null);
+        }
+
+        if (strs != null) {
+            for (CharSequence str : strs) {
+                eq = eq || str.equals(cs);
+            }
+        }
+
+        return eq;
+    }
+
+    /**
+     * 判断字符是否包含字符数组中的任意一个字符
+     *
+     * @param cs 字符
+     * @param searchChars 包含的字符数组
+     * @return true：包含 false：不包含
+     */
+    private static boolean containsAny(CharSequence cs, char[] searchChars) {
+        int csLength = cs.length();
+        int searchLength = searchChars.length;
+        int csLast = csLength - 1;
+        int searchLast = searchLength - 1;
+        for (int i = 0; i < csLength; i++) {
+            char ch = cs.charAt(i);
+            for (int j = 0; j < searchLength; j++) {
+                if (searchChars[j] == ch) {
+                    if (Character.isHighSurrogate(ch)) {
+                        if (j == searchLast) {
+                            return true;
+                        }
+                        if (i < csLast && searchChars[j + 1] == cs.charAt(i + 1)) {
+                            return true;
+                        }
+                    }
+                    else {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 获取子字符串在字符串中出现的次数
+     *
+     * @param str 字符串
+     * @param sub 子字符串
+     * @return 出现的次数
+     */
+    private static int countMatches(CharSequence str, CharSequence sub) {
+        if (EmptyUtils.isEmpty(str) || EmptyUtils.isEmpty(sub)) {
+            return 0;
+        }
+        int count = 0;
+        int idx = 0;
+        while ((idx = indexOf(str, sub, idx)) != -1) {
+            count++;
+            idx += sub.length();
+        }
+        return count;
+    }
+
+
+    private static int indexOf(CharSequence cs, CharSequence searchChar, int start) {
+        return cs.toString().indexOf(searchChar.toString(), start);
     }
 
     /**
