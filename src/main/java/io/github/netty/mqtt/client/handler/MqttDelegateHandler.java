@@ -139,7 +139,7 @@ public interface MqttDelegateHandler {
     /**
      * 发送一个MQTT puback
      *
-     * @param channel Channel
+     * @param channel 通道
      * @param mqttMsg MqttMsg
      */
     void sendPuback(Channel channel, MqttMsg mqttMsg);

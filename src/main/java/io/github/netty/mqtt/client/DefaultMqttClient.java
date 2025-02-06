@@ -150,7 +150,7 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
         try {
             Channel channel = currentChannel;
             //发送发布消息之前进行检查
-            sendMsgCheck(channel, mqttMsgInfo.getQos());
+            sendMsgCheck(channel, mqttMsgInfo.getQos(),mqttMsgInfo.getTopic());
             //执行发布消息
             MqttFuture msgFuture = doPublish(channel, mqttMsgInfo);
             return new MqttFutureWrapper(msgFuture);
@@ -285,10 +285,7 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
         LOCK.readLock().lock();
         try {
             Channel channel = currentChannel;
-            //关闭检查
-            closeCheck();
-            //在线检查，必须在线才能进行下一步
-            onlineCheck(channel);
+            unsubscribeCheck(channel,topicList);
             //进行取消订阅操作
             MqttFuture unsubscribeFuture = doUnsubscribeFuture(channel, topicList, mqttUserProperties);
             return new MqttFutureWrapper(unsubscribeFuture);
@@ -565,23 +562,26 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
     /**
      * 发送消息检查
      *
-     * @param channel
-     * @param qos
+     * @param channel 通道
+     * @param qos QoS
+     * @param topic 主题
      */
-    private void sendMsgCheck(Channel channel, MqttQoS qos) {
+    private void sendMsgCheck(Channel channel, MqttQoS qos, String topic) {
         //关闭检查
         closeCheck();
         //在线检查
         onlineCheck(channel);
         //qos检查
         qosCheck(qos);
+        //主题检验
+        MqttUtils.topicCheck(topic,false);
     }
 
     /**
      * 是否是高等级的qos（1,2）
      *
-     * @param qos
-     * @return
+     * @param qos QoS
+     * @return true : 是 false : 否
      */
     private boolean isHighQos(MqttQoS qos) {
         return (qos == MqttQoS.AT_LEAST_ONCE) || (qos == MqttQoS.EXACTLY_ONCE);
@@ -590,8 +590,8 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
     /**
      * 订阅检查
      *
-     * @param channel
-     * @param mqttSubInfoList
+     * @param channel 通道
+     * @param mqttSubInfoList MqttSubInfo列表
      */
     private void subscribeCheck(Channel channel, List<MqttSubInfo> mqttSubInfoList) {
         closeCheck();
@@ -601,7 +601,23 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
             MqttQoS qos = mqttSubInfo.getQos();
             AssertUtils.notEmpty(topic, "topic is empty");
             AssertUtils.notNull(qos, "qos is null");
+            MqttUtils.topicCheck(topic,true);
             qosCheck(qos);
+        }
+    }
+
+    /**
+     * 取消订阅检查
+     *
+     * @param channel 通道
+     * @param topicList 主题列表
+     */
+    private void unsubscribeCheck(Channel channel, List<String> topicList) {
+        closeCheck();
+        onlineCheck(channel);
+        for (String topic : topicList) {
+            AssertUtils.notEmpty(topic, "topic is empty");
+            MqttUtils.topicCheck(topic,true);
         }
     }
 
@@ -614,8 +630,8 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
     /**
      * 转换为MqttSubInfo列表
      *
-     * @param topicList
-     * @param qos
+     * @param topicList 主题列表
+     * @param qos QoS
      * @return MqttSubInfo列表
      */
     private List<MqttSubInfo> toSubInfoList(List<String> topicList, MqttQoS qos) {
@@ -629,7 +645,7 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
     /**
      * 连接检查
      *
-     * @param channel
+     * @param channel 通道
      */
     private void connectCheck(Channel channel) {
         //关闭检查
@@ -749,7 +765,7 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
     /**
      * 是否在线，TCP是连接中（ESTABLISHED），且认证完成
      *
-     * @param channel Channel
+     * @param channel 通道
      * @return 是否在线
      */
     private boolean isOnline(Channel channel) {
@@ -773,7 +789,7 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
     /**
      * 是否连接中（ESTABLISHED）
      *
-     * @param channel Channel
+     * @param channel 通道
      * @return 是否连接中
      */
     private boolean isConnected(Channel channel) {
@@ -786,7 +802,7 @@ public class DefaultMqttClient extends AbstractMqttClient implements MqttCallbac
     /**
      * Channel是否打开中
      *
-     * @param channel Channel
+     * @param channel 通道
      * @return 是否打开中
      */
     private boolean isOpen(Channel channel) {

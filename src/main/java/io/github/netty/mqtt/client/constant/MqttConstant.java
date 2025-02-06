@@ -80,6 +80,34 @@ public class MqttConstant {
      * MQTT最大的消息数量
      */
     public static final int MQTT_MAX_MSG_ID_NUMBER = 65535;
+    /**
+     * MQTT最小的主题长度
+     */
+    public static final int MQTT_MIN_TOPIC_LEN = 1;
+    /**
+     * MQTT最大的主题长度
+     */
+    public static final int MQTT_MAX_TOPIC_LEN = 65535;
+
+    /**
+     * MQTT多级通配符
+     */
+    public static final String MQTT_MULTI_LEVEL_WILDCARD = "#";
+
+    /**
+     * MQTT主题级别的分隔符
+     */
+    public static final String MQTT_TOPIC_LEVEL_SEPARATOR = "/";
+
+    /**
+     * MQTT单级通配符
+     */
+    public static final String MQTT_SINGLE_LEVEL_WILDCARD = "+";
+
+    /**
+     * MQTT默认的字符集编码
+     */
+    public static final String MQTT_DEFAULT_CHARACTER = "UTF-8";
 
     /**
      * cglib创建的代理对象类名包含的内容
@@ -98,6 +126,12 @@ public class MqttConstant {
      * 代理类型 jdk
      */
     public static final String PROXY_TYPE_JDK = "jdk";
+
+
+    /**
+     * 空字符
+     */
+    public static final char NUL = '\u0000';
 
     /**
      * MQTT版本默认值
@@ -231,4 +265,6 @@ public class MqttConstant {
      * 正常断开连接成功码
      */
     public static final byte DISCONNECT_SUCCESS_REASON_CODE = 0x00;
+
+
 }

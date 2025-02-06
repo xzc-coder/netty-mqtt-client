@@ -2,6 +2,7 @@ package io.github.netty.mqtt.client.msg;
 
 
 import io.github.netty.mqtt.client.support.util.AssertUtils;
+import io.github.netty.mqtt.client.support.util.MqttUtils;
 import io.netty.handler.codec.mqtt.MqttProperties;
 import io.netty.handler.codec.mqtt.MqttQoS;
 
@@ -81,6 +82,7 @@ public class MqttWillMsg {
         AssertUtils.notNull(willTopic, "willTopic is null");
         AssertUtils.notNull(willMessageBytes, "willMessageBytes is null");
         AssertUtils.notNull(willQos, "willQos is null");
+        MqttUtils.topicCheck(willTopic,false);
         this.willTopic = willTopic;
         this.willMessageBytes = willMessageBytes;
         this.willQos = willQos;
